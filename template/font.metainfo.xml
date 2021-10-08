@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>	
+ <component type="font">
+   <id>com.{{ fontName }}</id>
+   <metadata_license>CC-BY-3.0</metadata_license>
+   <project_license>{{ fontLicense }}</project_license>
+   <name>{{ fontName}}</name>
+   <summary>{{ fontSummary }}</summary>
+   <description>
+     <p>{{ fontDescription }}</p>
+   </description>
+   <updatecontact>vishalvijayraghavan_at_gmail_dot_com</updatecontact>
+   <url type="homepage">{{ fontURL }}</url>
+   <provides>
+     <font>{{ fontName }}</font>
+   </provides>
+ </component>
