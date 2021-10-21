@@ -1,12 +1,12 @@
-%global fontname {{ fontName }}
+%global fontname {{ Font_Family }}
 %global fontconf {{ fconfig_weight }}-%{fontname}.conf
-%global desc {{ fontDescription }}
+%global desc {{ Description }}
 
 Name:		%{fontname}-fonts
-Version:	{{ fontVersion }}
+Version:	{{ Version }}
 Release:	1%{?dist}
 Summary:	{{ fontSummary }}
-License:	{{ fontLicense }}
+License:	{{ License_Description }}
 URL:		{{ fontURL }}
 Source0:	{{ fontSource }}
 Source1:	%{fontname}-fontconfig.conf
@@ -24,7 +24,7 @@ Requires:	fontpackages-filesystem
 %{desc}
 
 %prep
-%autosetup -n {{ fontname }}%{version}
+%autosetup -n %{fontname }%{version}
 chmod 644 *.txt
 rm -rf ttf
 
