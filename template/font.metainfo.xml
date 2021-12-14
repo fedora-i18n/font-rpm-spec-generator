@@ -4,12 +4,12 @@
    <metadata_license>CC-BY-3.0</metadata_license>
    <project_license>{{ License_Description }}</project_license>
    <name>{{ Font_Family }}</name>
-   <summary>{{ fontSummary }}</summary>
+   <summary>{{ summary }}</summary>
    <description>
-     <p>{{ Description }}</p>
+     <p>{{ description }}</p>
    </description>
    <updatecontact>vishalvijayraghavan_at_gmail_dot_com</updatecontact>
-   <url type="homepage">{{ fontURL }}</url>
+   <url type="homepage">{{ url }}</url>
    <provides>
      <font>{{ Font_Family }}</font>
    </provides>

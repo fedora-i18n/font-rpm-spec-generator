@@ -1,5 +1,5 @@
 from fontTools.ttLib import TTFont
-
+import sys
 NAME_TABLE = {
     0: 'CopyrightNotice',
     1: 'Font_Family',
@@ -29,10 +29,16 @@ NAME_TABLE = {
     25: 'Variations_PostScript_Name_Prefix'
     }
     
+    
 def font_meta_reader(fontfile):
     meta_data = dict()
-    font = TTFont(fontfile)
-    # variable fmd denotes font meta data or fonts meta attributes
-    for fmd in font['name'].names:
-        meta_data[NAME_TABLE.get(fmd.nameID, False)] = fmd.toStr()
-    return meta_data
+    try:
+        font = TTFont(fontfile)
+        # variable fmd denotes font meta data or fonts meta attributes
+        for fmd in font['name'].names:
+            meta_data[NAME_TABLE.get(fmd.nameID, False)] = fmd.toStr()
+        return meta_data
+    except FileNotFoundError:
+        print("invalid font file path")
+        sys.exit(1)
+    
