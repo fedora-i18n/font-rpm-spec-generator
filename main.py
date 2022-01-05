@@ -23,6 +23,7 @@ def arg_parse():
 
 if __name__ == "__main__":
 
+    
     args = arg_parse()
     input_data = dict()
     # parse input and add into dict

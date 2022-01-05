@@ -4,8 +4,10 @@ URL:		{{ url }}
 %global	fontname	{{ Font_Family }}
 %global	foundry	{{ Manufacturer_Name }}
 %global	fontlicense	{{ License_Description }}
+%global fontlicenses {{ License_file }}
+%global fontdocs {{ font_docs }}
 %global	fontfamily	{{ Font_Family }}    
-%global	fonts	build/*.ttf
+%global	fonts	{{ font_binary_path }}
 %global	fontconfs	%{SOURCE1}
 %global	fontdescription	%{expand:	
 {{ description }} .}
@@ -43,11 +45,6 @@ make PY=python3
 %fontcheck
 
 %fontfiles
-
-%files
-%doc README.md
-%license LICENSE.txt
-
 
 %changelog
 * Thu Dec 09 2021 Vishal Vijayraghavan <vishalvijayraghavan@gmail.com> - {{ Version }}-0

@@ -1,4 +1,5 @@
 import os
+import fnmatch, functools, itertools
 from re import split, template
 import sys
 from jinja2.filters import do_list
@@ -37,7 +38,7 @@ LICENSES = {
 }
 
 class TemplateGenerator:
-    
+
     def metadata_cleaner(self, metadata, inputdata):
         '''
         parse the font metadata and clean
@@ -68,6 +69,20 @@ class TemplateGenerator:
 
         meta_data = self.metadata_cleaner(meta_data, input_data)
 
+        # get file paths for readme, license , doc & etc
+        meta_data['License_file'] = self.findfiles(pattern=["LICENSE"], path=meta_data['source'])[0] 
+        meta_data['font_docs'] = " ".join(self.findfiles(pattern=["README.md","README.rst","*.pdf","*.docs"], path=meta_data['source']))
+        fontfile_paths = self.findfiles(pattern=["*.ttf","*.otf"], path=meta_data['source'],getabs=True)
+        font_bin_path = set()
+        for font_file in fontfile_paths:
+            if font_file.endswith(".ttf"):
+                font_bin_path.add(os.path.dirname(font_file)+"/*.ttf")
+            elif font_file.endswith(".otf"):
+                font_bin_path.add(os.path.dirname(font_file)+"/*.otf")
+                
+        meta_data['font_binary_path'] = list(font_bin_path)[0].replace(meta_data['source'],"")
+
+
         file_loader = FileSystemLoader("template")
         env = Environment(loader=file_loader)
         template = dict()
@@ -85,3 +100,19 @@ class TemplateGenerator:
         for filename,data in template.items():
             with open(os.path.join(draft_dir,filename),"w") as fobj:
                 fobj.writelines(data)
+
+    def findfiles(self, pattern, path, getabs=False):
+        result = []
+        path = path or "."
+        path_patterns = pattern or ["*"]
+        for root, dirs, files in os.walk(path):
+            filter_partial = functools.partial(fnmatch.filter, files)
+            for file_name in itertools.chain(*map(filter_partial, path_patterns)):
+                if getabs:
+                    f_name = os.path.join(root, file_name)    
+                else:    
+                    f_name = os.path.join(root.replace(path,""), file_name) 
+                    if f_name.startswith("/"):
+                        f_name = f_name.replace("/","")
+                result.append(f_name)
+        return result
