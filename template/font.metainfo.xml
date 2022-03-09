@@ -8,7 +8,7 @@
    <description>
      <p>{{ description }}</p>
    </description>
-   <updatecontact>vishalvijayraghavan_at_gmail_dot_com</updatecontact>
+   <updatecontact>{{ username }}_at_fedoraproject_dot_org</updatecontact>
    <url type="homepage">{{ url }}</url>
    <provides>
      <font>{{ Font_Family }}</font>

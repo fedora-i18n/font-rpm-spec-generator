@@ -41,4 +41,7 @@ def font_meta_reader(fontfile):
     except FileNotFoundError:
         print("invalid font file path")
         sys.exit(1)
-    
+
+if __name__ == "__main__":
+    fontfile = "/home/vvijayra/git_projects/liberation-fonts/liberation-fonts-ttf-2.1.5/LiberationSans-Bold.ttf"
+    print(font_meta_reader(fontfile))

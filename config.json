@@ -1,8 +1,8 @@
 {
     "summary": "dummy summary",
     "description": "dummy Desc",
-    "url": "dummy url",
-    "lang":"ml",
-    "source":"/home/vvijayra/git_projects/liberation-fonts",
-    "file":"/usr/share/fonts/liberation-mono/LiberationMono-Bold.ttf"
+    "url": "https://github.com/liberationfonts/liberation-fonts",
+    "lang":"en",
+    "dir":"/home/vvijayra/git_projects/liberation-fonts",
+    "source":"https://github.com/liberationfonts/liberation-fonts/files/7261483/liberation-fonts-2.1.5.tar.gz"
 }

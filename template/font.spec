@@ -12,7 +12,7 @@ URL:		{{ url }}
 %global	fontdescription	%{expand:	
 {{ description }} .}
 
-Source0:	{{ source }}
+Source0:	{{ source }}#/%{fontname}-%{version}.tar.gz
 Source1:	%{fontname}.fontconfig.conf
 Source2:	%{fontname}.metainfo.xml
 BuildRequires: 	make
@@ -29,9 +29,8 @@ Requires:	fontpackages-filesystem
 %patchlist
 
 %prep
-%autosetup -n meera-Version%{version}
-chmod 644 *.txt
-rm -rf ttf
+%autosetup -n %{fontname}-%{version}
+
 
 %build 
 make PY=python3
@@ -47,5 +46,5 @@ make PY=python3
 %fontfiles
 
 %changelog
-* Thu Dec 09 2021 Vishal Vijayraghavan <vishalvijayraghavan@gmail.com> - {{ Version }}-0
-- first update spec release of smc-meera fonts
+* {{ datetime }} {{ username }} <{{ username }}@fedoraproject.org> - {{ Version }}-0
+- initial release

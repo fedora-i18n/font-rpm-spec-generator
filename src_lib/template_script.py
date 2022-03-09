@@ -61,7 +61,14 @@ class TemplateGenerator:
         '''
         spec, fontconfig & metainfo file generator using jinja templating
         '''
-        if 'file' in input_data.keys() and input_data['file'] != None:
+        meta_data = None
+
+        if 'dir' in input_data.keys() and input_data['dir'] != None:
+            fontfile_paths = self.findfiles(pattern=["*.ttf","*.otf"], path=input_data['dir'],getabs=True)
+            for fontfile in fontfile_paths: 
+                meta_data = font_meta_reader(fontfile)
+        
+        elif 'file' in input_data.keys() and input_data['file'] != None:
             meta_data = font_meta_reader(input_data['file'])
         else:
             print("Error: No fontfile passed in config or as cli argument")
@@ -70,9 +77,9 @@ class TemplateGenerator:
         meta_data = self.metadata_cleaner(meta_data, input_data)
 
         # get file paths for readme, license , doc & etc
-        meta_data['License_file'] = self.findfiles(pattern=["LICENSE"], path=meta_data['source'])[0] 
-        meta_data['font_docs'] = " ".join(self.findfiles(pattern=["README.md","README.rst","*.pdf","*.docs"], path=meta_data['source']))
-        fontfile_paths = self.findfiles(pattern=["*.ttf","*.otf"], path=meta_data['source'],getabs=True)
+        meta_data['License_file'] = self.findfiles(pattern=["LICENSE","OFL.txt"], path=meta_data['dir'])[0] 
+        meta_data['font_docs'] = " ".join(self.findfiles(pattern=["README.md","README.rst","*.pdf","*.docs"], path=meta_data['dir']))
+        fontfile_paths = self.findfiles(pattern=["*.ttf","*.otf"], path=meta_data['dir'],getabs=True)
         font_bin_path = set()
         for font_file in fontfile_paths:
             if font_file.endswith(".ttf"):
@@ -80,8 +87,7 @@ class TemplateGenerator:
             elif font_file.endswith(".otf"):
                 font_bin_path.add(os.path.dirname(font_file)+"/*.otf")
                 
-        meta_data['font_binary_path'] = list(font_bin_path)[0].replace(meta_data['source'],"")
-
+        meta_data['font_binary_path'] = list(font_bin_path)[0].replace(meta_data['dir'],"")
 
         file_loader = FileSystemLoader("template")
         env = Environment(loader=file_loader)
