@@ -38,6 +38,7 @@ def font_meta_reader(fontfile):
         for fmd in font['name'].names:
             if (fmd.platformID == 3 and fmd.langID == 0x0409) or (fmd.platformID == 1 and fmd.langID == 0):
                 meta_data[NAME_TABLE.get(fmd.nameID, False)] = fmd.toStr()
+        meta_data['foundry'] = font['OS/2'].achVendID
         return meta_data
     except FileNotFoundError:
         print("invalid font file path")
