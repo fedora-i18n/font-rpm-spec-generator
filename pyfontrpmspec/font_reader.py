@@ -36,7 +36,8 @@ def font_meta_reader(fontfile):
         font = TTFont(fontfile)
         # variable fmd denotes font meta data or fonts meta attributes
         for fmd in font['name'].names:
-            meta_data[NAME_TABLE.get(fmd.nameID, False)] = fmd.toStr()
+            if (fmd.platformID == 3 and fmd.langID == 0x0409) or (fmd.platformID == 1 and fmd.langID == 0):
+                meta_data[NAME_TABLE.get(fmd.nameID, False)] = fmd.toStr()
         return meta_data
     except FileNotFoundError:
         print("invalid font file path")
