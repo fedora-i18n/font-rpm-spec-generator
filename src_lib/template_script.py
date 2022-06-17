@@ -4,6 +4,9 @@ from re import split, template
 import sys
 from jinja2.filters import do_list
 from jinja2 import Environment, FileSystemLoader
+from pathlib import Path
+sys.path.append(str(Path(__file__).parents[1]))
+from pyfontrpmspec import font_reader as fr
 from src_lib import *
 
 # https://fedoraproject.org/wiki/Licensing:Main?rd=Licensing#Font_Licenses
@@ -66,10 +69,10 @@ class TemplateGenerator:
         if 'dir' in input_data.keys() and input_data['dir'] != None:
             fontfile_paths = self.findfiles(pattern=["*.ttf","*.otf"], path=input_data['dir'],getabs=True)
             for fontfile in fontfile_paths: 
-                meta_data = font_meta_reader(fontfile)
+                meta_data = fr.font_meta_reader(fontfile)
         
         elif 'file' in input_data.keys() and input_data['file'] != None:
-            meta_data = font_meta_reader(input_data['file'])
+            meta_data = fr.font_meta_reader(input_data['file'])
         else:
             print("Error: No fontfile passed in config or as cli argument")
             sys.exit(1)
