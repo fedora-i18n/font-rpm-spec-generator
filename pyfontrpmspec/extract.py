@@ -42,7 +42,8 @@ def extract(archive, name, version):
                         retval['root'] = parent
                     else:
                         retval['root'] = ''
-                if re.search(r'(?i:license)', fn):
+                LICENSES = [ 'OFL', 'MIT', 'GPL' ]
+                if re.search(r'(?i:license)', fn) or re.search(re.compile('|'.join(LICENSES)), fn):
                     if not 'license' in retval:
                         retval['license'] = []
                     retval['license'].append(drop_root(os.path.join(os.path.relpath(root, tempdir), fn)))
@@ -70,6 +71,9 @@ def extract(archive, name, version):
                             print('Duplicate font files detected. this may not works as expected: {}'.format(fontfn), flush=True, file=sys.stderr)
                             return None
 
+        if not 'license' in retval:
+            print('Unable to find out any license files in {}'.format(archive), flush=True, file=sys.stderr)
+            return None
         if not 'fonts' in retval:
             print('Unable to find out any fonts files in {}'.format(archive), flush=True, file=sys.stderr)
             return None
