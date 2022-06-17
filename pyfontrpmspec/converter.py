@@ -18,6 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
+import shutil
 import subprocess
 import sys
 from pyrpm.spec import Spec
@@ -25,6 +26,9 @@ from pyfontrpmspec import extract
 from pyfontrpmspec import template
 
 def old2new(specfile, args):
+    if not shutil.which('rpmspec'):
+        print('rpmspec is not installed', flush=True, file=sys.stderr)
+        return None
     origspec = Spec.from_file(specfile)
     ss = subprocess.run(['rpmspec', '-P', specfile], stdout=subprocess.PIPE)
     spec = Spec.from_string(ss.stdout.decode('utf-8'))
