@@ -40,6 +40,7 @@ def old2new(specfile, args):
         exdata['setup'] = ''
     else:
         exdata['setup'] = '-n {}'.format(exdata['root'])
+    templates = None
     if len(spec.packages) == 1:
         if len(fcfiles) > 1:
             print('Detected multiple fontconfig files.', flush=True, file=sys.stderr)
@@ -71,5 +72,7 @@ def old2new(specfile, args):
             'changelog': spec.changelog,
         }
         templates = template.get(1, data)
+    else:
+        print('Multiple sub-packages not yet supported', flush=True, file=sys.stderr)
 
     return templates
