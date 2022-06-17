@@ -61,7 +61,7 @@ def old2new(specfile, args):
             'fontconfig': fcfiles[0],
             'license': spec.license,
             'license_file': ' '.join(exdata['license']),
-            'docs': ' '.join(exdata['docs']),
+            'docs': ' '.join(exdata['docs']) if 'docs' in exdata else '%{nil}',
             'fonts': ' '.join(exdata['fonts']),
             'foundry': exdata['foundry'],
             'family': family,
