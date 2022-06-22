@@ -72,7 +72,7 @@ def font_meta_reader(fontfile):
         meta_data['foundry'] = transform_foundry(font['OS/2'].achVendID)
         return meta_data
     except FileNotFoundError:
-        print("invalid font file path", flush=True, file=sys.stderr)
+        print('invalid font file path: {}'.format(fontfile), flush=True, file=sys.stderr)
         sys.exit(1)
 
 if __name__ == "__main__":
