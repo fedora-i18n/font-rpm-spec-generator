@@ -70,7 +70,6 @@ class Source:
                 self._root = str(Path(*Path(root).relative_to(self._tempdir.name).parts[:1]))
                 for n in files:
                     fn = str(Path(root).relative_to(self._tempdir.name) / n)
-                    print(fn)
                     yield File(fn, self._tempdir.name)
         except shutil.ReadError:
             yield File(self.name, self.__sourcedir)
@@ -106,7 +105,6 @@ class File:
         p = Path(self._filename)
         d = p.parent
         n = p.name
-        print(d,n,d.parts[1:])
         if not d.parts[1:]:
             if d == '.':
                 return str(d / n)
