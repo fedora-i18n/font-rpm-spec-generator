@@ -61,10 +61,10 @@ def transform_foundry(id):
     }
     return FOUNDARIES[id] if id in FOUNDARIES else id
 
-def font_meta_reader(fontfile):
+def font_meta_reader(fontfile, font_number = 0):
     meta_data = dict()
     try:
-        font = TTFont(fontfile)
+        font = TTFont(fontfile, fontNumber = font_number)
         # variable fmd denotes font meta data or fonts meta attributes
         for fmd in font['name'].names:
             if (fmd.platformID == 3 and fmd.langID == 0x0409) or (fmd.platformID == 1 and fmd.langID == 0):
