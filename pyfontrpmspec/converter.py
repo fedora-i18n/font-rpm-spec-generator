@@ -62,7 +62,7 @@ def old2new(specfile, args):
                 else:
                     print('Duplicate font files detected. this may not works as expected: {}'.format(sf.name), flush=True, file=sys.stderr)
             else:
-                print('Unknown type of file: {}'.format(sf.name))
+                print('Unknown type of file: {}'.format(sf.name), flush=True, file=sys.stderr)
 
         if 'archive' not in exdata or exdata['archive'] == False:
             exdata['archive'] = source.is_archive()
