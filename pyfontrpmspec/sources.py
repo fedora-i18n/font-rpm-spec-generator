@@ -163,7 +163,7 @@ class File:
             return False
 
     def is_font(self):
-        if self.name.endswith('.otf') or self.name.endswith('.ttf'):
+        if self.name.endswith('.otf') or self.name.endswith('.ttf') or self.name.endswith('.ttc'):
             return True
         else:
             return False
