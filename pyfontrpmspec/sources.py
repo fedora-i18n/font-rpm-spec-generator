@@ -98,7 +98,7 @@ class File:
     def __init__(self, fn, prefixdir):
         self._filename = fn
         self._prefixdir = prefixdir
-        self.__family = None
+        self.__families = None
 
     @property
     def name(self):
@@ -127,21 +127,36 @@ class File:
 
     @property
     def family(self):
+        retval = self.families
+        if retval is not None:
+            return retval[0]
+        else:
+            return None
+
+    @property
+    def families(self):
         if self.is_fontconfig():
-            if self.__family is None:
+            if self.__families is None:
                 tree = etree.parse(self.fullname)
-                family = tree.xpath('/fontconfig/alias/family/text()')
-                if not family:
-                    family = tree.xpath('/fontconfig/match/edit[@name=\'family\']/string/text()')
-                    if not family:
+                family_list = tree.xpath('/fontconfig/alias/family/text()')
+                if not family_list:
+                    family_list = tree.xpath('/fontconfig/match/edit[@name=\'family\']/string/text()')
+                    if not family_list:
                         raise ValueError('Unable to guess the targeted family name')
-                family = list(set(family))
-                if len(family) > 1:
-                    print('Detected multiple family names: {}'.format(family), flush=True, file=sys.stderr)
-                self.__family = family[0]
-                return self.__family
+                family_list = list(set(family_list))
+                family_list.sort(key=lambda s: len(s))
+                if len(family_list) > 1:
+                    basename = family_list[0]
+                    error = []
+                    for f in family_list[1:]:
+                        if not re.search(r'^{}'.format(basename), f):
+                            error.append(f)
+                    if len(error):
+                        print('Different family names detected: {}'.format(error), flush=True, file=sys.stderr)
+                self.__families = family_list
+                return self.__families
             else:
-                return self.__family
+                return self.__families
         else:
             return None
 
