@@ -76,7 +76,7 @@ class Source:
                     fn = str(Path(root).relative_to(self._tempdir.name) / n)
                     yield File(fn, self._tempdir.name)
         except shutil.ReadError:
-            yield File(self.realname, self.__sourcedir)
+            yield File(self.realname, self.__sourcedir, is_source = True)
         else:
             if self._tempdir is not None:
                 self._tempdir.cleanup()
@@ -117,10 +117,11 @@ class Source:
 
 class File:
 
-    def __init__(self, fn, prefixdir):
+    def __init__(self, fn, prefixdir, is_source = False):
         self._filename = fn
         self._prefixdir = prefixdir
         self.__families = None
+        self.__is_source = is_source
 
     def __name(self, name):
         p = Path(name)
@@ -222,6 +223,9 @@ class File:
             return True
         else:
             return False
+
+    def is_source(self):
+        return self.__is_source
 
 if __name__ == '__main__':
     s = Source('./foo.zip')

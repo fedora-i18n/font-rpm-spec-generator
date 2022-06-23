@@ -69,16 +69,16 @@ class TestSource(unittest.TestCase):
 class TestFile(unittest.TestCase):
 
     def setUp(self):
-        self.license_from_source = src.File('LICENSE.txt', '/path/to/source')
-        self.doc_from_source = src.File('README.txt', '/path/to/source')
-        self.doc_from_archive = src.File('./README.md', '/tmp/foo')
-        self.doc_from_archive_sub = src.File('foo-1.0/README.md', '/tmp/foo')
-        self.font_from_source = src.File('foo.ttf', '/path/to/source')
-        self.font_from_web = src.File('http://example.com/baz/foo.ttf', '/path/to/source')
-        self.font_from_web_frag = src.File('http://example.com/foo.ttf#/bar.ttf', '/path/to/source')
-        self.font_from_archive = src.File('ttf/foo.ttf', '/tmp/foo')
-        self.font_from_archive_sub = src.File('foo-1.0/ttf/foo.ttf', '/tmp/foo')
-        self.fc_from_source = src.File('foo.conf', '/path/to/source')
+        self.license_from_source = src.File('LICENSE.txt', '/path/to/source', True)
+        self.doc_from_source = src.File('README.txt', '/path/to/source', True)
+        self.doc_from_archive = src.File('./README.md', '/tmp/foo', False)
+        self.doc_from_archive_sub = src.File('foo-1.0/README.md', '/tmp/foo', False)
+        self.font_from_source = src.File('foo.ttf', '/path/to/source', True)
+        self.font_from_web = src.File('http://example.com/baz/foo.ttf', '/path/to/source', True)
+        self.font_from_web_frag = src.File('http://example.com/foo.ttf#/bar.ttf', '/path/to/source', True)
+        self.font_from_archive = src.File('ttf/foo.ttf', '/tmp/foo', False)
+        self.font_from_archive_sub = src.File('foo-1.0/ttf/foo.ttf', '/tmp/foo', False)
+        self.fc_from_source = src.File('foo.conf', '/path/to/source', True)
 
     def test_name(self):
         self.assertEqual(self.license_from_source.name, 'LICENSE.txt')
@@ -175,6 +175,18 @@ class TestFile(unittest.TestCase):
         self.assertEqual(self.font_from_archive.is_fontconfig(), False)
         self.assertEqual(self.font_from_archive_sub.is_fontconfig(), False)
         self.assertEqual(self.fc_from_source.is_fontconfig(), True)
+
+    def test_is_source(self):
+        self.assertEqual(self.license_from_source.is_source(), True)
+        self.assertEqual(self.doc_from_source.is_source(), True)
+        self.assertEqual(self.doc_from_archive.is_source(), False)
+        self.assertEqual(self.doc_from_archive_sub.is_source(), False)
+        self.assertEqual(self.font_from_source.is_source(), True)
+        self.assertEqual(self.font_from_web.is_source(), True)
+        self.assertEqual(self.font_from_web_frag.is_source(), True)
+        self.assertEqual(self.font_from_archive.is_source(), False)
+        self.assertEqual(self.font_from_archive_sub.is_source(), False)
+        self.assertEqual(self.fc_from_source.is_source(), True)
 
 if __name__ == '__main__':
     unittest.main()
