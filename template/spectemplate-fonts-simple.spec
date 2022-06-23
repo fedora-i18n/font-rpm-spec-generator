@@ -77,7 +77,9 @@ Source{{ nsources[s] }}: {{ s }}{% endfor %}
 %fontpkg
 
 %prep
-%setup -q {{ setup }}
+%setup -q {{ setup }}{% if copy_source %}
+cp %{SOURCE0} .{% endif %}{% for s in exsources %}
+cp %{SOURCE{{ nsources[s] }}} .{% endfor %}
 
 %build
 %fontbuild

@@ -32,7 +32,7 @@ def old2new(specfile, args):
     origspec = Spec.from_file(specfile)
     ss = subprocess.run(['rpmspec', '-P', specfile], stdout=subprocess.PIPE)
     spec = Spec.from_string(ss.stdout.decode('utf-8'))
-    exdata = {'sources': []}
+    exdata = {'sources': [], 'nsources': {}}
     nsource = 20
     sources = src.Sources(arrays = spec.sources, sourcedir = args.sourcedir)
     for source in sources:
@@ -82,8 +82,6 @@ def old2new(specfile, args):
                 exdata['root'] = ''
         if not source.ignore and not source.is_archive():
             exdata['sources'].append(source.realname)
-            if 'nsources' not in exdata:
-                exdata['nsources'] = {}
             exdata['nsources'][source.realname] = nsource
             nsource += 1
 
@@ -122,12 +120,13 @@ def old2new(specfile, args):
             'release': origspec.release,
             'url': spec.url,
             'source': origspec.sources[0],
+            'copy_source': not exdata['archive'],
             'exsources': exdata['sources'],
             'nsources': exdata['nsources'],
             'fontconfig': exdata['fontconfig'][family].name,
             'license': spec.license,
-            'license_file': ' '.join([s.name if not s.is_source() else '%{{SOURCE{}}}'.format(exdata['nsources'][s.realname]) for s in exdata['licenses']]),
-            'docs': ' '.join([s.name if not s.is_source() else '%{{SOURCE{}}}'.format(exdata['nsources'][s.realname]) for s in exdata['docs']]) if 'docs' in exdata else '%{nil}',
+            'license_file': ' '.join([s.name for s in exdata['licenses']]),
+            'docs': ' '.join([s.name for s in exdata['docs']]) if 'docs' in exdata else '%{nil}',
             'fonts': ' '.join([s.name for s in exdata['fonts']]),
             'foundry': exdata['foundry'],
             'family': family,
