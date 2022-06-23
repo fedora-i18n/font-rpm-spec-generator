@@ -93,6 +93,8 @@ class Source:
         else:
             if u.fragment:
                 return self.__name(u.fragment)
+            elif u.query:
+                return self.__name(u.query)
             else:
                 return self.__name(u.path)
 
@@ -143,6 +145,8 @@ class File:
         else:
             if u.fragment:
                 return Path(u.fragment).name
+            elif u.query:
+                return Path(u.query).name
             else:
                 return Path(u.path).name
 
@@ -199,7 +203,7 @@ class File:
 
     def is_license(self):
         LICENSES = [ 'OFL', 'MIT', 'GPL' ]
-        if re.search(r'(?i:license)', self.name) or re.search(re.compile('|'.join(LICENSES)), self.name):
+        if re.search(r'(?i:license|notice)', self.name) or re.search(re.compile('|'.join(LICENSES)), self.name):
             return True
         else:
             return False
