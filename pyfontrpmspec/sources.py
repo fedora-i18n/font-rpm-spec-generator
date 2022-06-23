@@ -24,6 +24,7 @@ import sys
 import tempfile
 from lxml import etree
 from pathlib import Path
+from urllib.parse import urlparse
 
 class Sources:
 
@@ -32,10 +33,12 @@ class Sources:
         self.__sourcedir = sourcedir
         if arrays is not None:
             for e in arrays:
-                self.add(str(Path(e).name))
+                self.add(e)
 
-    def add(self, fn):
-        self._sources.append(Source(fn, sourcedir = self.__sourcedir))
+    def add(self, fn, sourcedir = None):
+        if sourcedir is None:
+            sourcedir = self.__sourcedir
+        self._sources.append(Source(fn, sourcedir = sourcedir))
         return len(self._sources)-1
 
     def get(self, idx):
@@ -55,6 +58,7 @@ class Source:
         self._sourcename = fn
         self._tempdir = None
         self._root = None
+        self.ignore = False
         self._is_archive = False
 
     def __del__(self):
@@ -64,7 +68,7 @@ class Source:
     def __iter__(self):
         self._tempdir = tempfile.TemporaryDirectory()
         try:
-            shutil.unpack_archive(self.realname, self._tempdir.name)
+            shutil.unpack_archive(self.fullname, self._tempdir.name)
             self._is_archive = True
             for root, dirs, files in os.walk(self._tempdir.name):
                 self._root = str(Path(*Path(root).relative_to(self._tempdir.name).parts[:1]))
@@ -72,19 +76,37 @@ class Source:
                     fn = str(Path(root).relative_to(self._tempdir.name) / n)
                     yield File(fn, self._tempdir.name)
         except shutil.ReadError:
-            yield File(self.name, self.__sourcedir)
+            yield File(self.realname, self.__sourcedir)
         else:
             if self._tempdir is not None:
                 self._tempdir.cleanup()
                 self._tempdir = None
 
+    def __name(self, name):
+        return Path(name).name
+
     @property
     def name(self):
-        return self._sourcename
+        u = urlparse(self.realname, allow_fragments=True)
+        if not u.scheme:
+            return self.__name(self.realname)
+        else:
+            if u.fragment:
+                return self.__name(u.fragment)
+            else:
+                return self.__name(u.path)
 
     @property
     def realname(self):
-        return str(Path(self.__sourcedir) / self._sourcename)
+        return self._sourcename
+
+    @property
+    def fullname(self):
+        u = urlparse(self.realname, allow_fragments=True)
+        if not u.scheme:
+            return str(Path(self.__sourcedir) / self.realname)
+        else:
+            return str(Path(self.__sourcedir) / self.name)
 
     @property
     def root(self):
@@ -100,9 +122,8 @@ class File:
         self._prefixdir = prefixdir
         self.__families = None
 
-    @property
-    def name(self):
-        p = Path(self._filename)
+    def __name(self, name):
+        p = Path(name)
         d = p.parent
         n = p.name
         if not d.parts[1:]:
@@ -114,12 +135,27 @@ class File:
             return str(d.relative_to(*d.parts[:1]) / n)
 
     @property
+    def name(self):
+        u = urlparse(self.realname, allow_fragments=True)
+        if not u.scheme:
+            return self.__name(self.realname)
+        else:
+            if u.fragment:
+                return self.__name(u.fragment)
+            else:
+                return self.__name(u.path)
+
+    @property
     def realname(self):
         return self._filename
 
     @property
     def fullname(self):
-        return str(Path(self.prefix) / self.realname)
+        u = urlparse(self.realname, allow_fragments=True)
+        if not u.scheme:
+            return str(Path(self.prefix) / self.realname)
+        else:
+            return str(Path(self.prefix) / self.name)
 
     @property
     def prefix(self):
