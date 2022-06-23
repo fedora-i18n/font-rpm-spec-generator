@@ -32,7 +32,7 @@ def old2new(specfile, args):
     origspec = Spec.from_file(specfile)
     ss = subprocess.run(['rpmspec', '-P', specfile], stdout=subprocess.PIPE)
     spec = Spec.from_string(ss.stdout.decode('utf-8'))
-    exdata = {}
+    exdata = {'sources': []}
     sources = src.Sources(arrays = spec.sources, sourcedir = args.sourcedir)
     for source in sources:
         for sf in source:
@@ -50,6 +50,8 @@ def old2new(specfile, args):
                 if sf.family in exdata['fontconfig']:
                     print('Duplicate family name: {}'.format(sf.family), flush=True, file=sys.stderr)
                 exdata['fontconfig'][sf.family] = sf.name
+                if not source.is_archive():
+                    source.ignore = True
             elif sf.is_font():
                 if 'fonts' not in exdata:
                     exdata['fonts'] = []
@@ -61,17 +63,24 @@ def old2new(specfile, args):
                     exdata['foundry'] = exdata['fontinfo'][sf.name]['foundry']
                 else:
                     print('Duplicate font files detected. this may not works as expected: {}'.format(sf.name), flush=True, file=sys.stderr)
+                if not source.is_archive():
+                    source.ignore = True
             else:
                 print('Unknown type of file: {}'.format(sf.name), flush=True, file=sys.stderr)
+                if not source.is_archive():
+                    source.ignore = True
 
         if 'archive' not in exdata or exdata['archive'] == False:
             exdata['archive'] = source.is_archive()
         elif source.is_archive():
             raise AttributeError('Multiple archives are not supported')
-        if source.root != '{}-{}'.format(spec.name, spec.version):
-            exdata['root'] = source.root
-        else:
-            exdata['root'] = ''
+        if 'root' not in exdata:
+            if source.root != '{}-{}'.format(spec.name, spec.version):
+                exdata['root'] = source.root
+            else:
+                exdata['root'] = ''
+        if not source.ignore and not source.is_archive():
+            exdata['sources'].append(source.realname)
 
     if 'licenses' not in exdata:
         raise TypeError('No license files detected')
@@ -107,7 +116,8 @@ def old2new(specfile, args):
             'version': spec.version,
             'release': origspec.release,
             'url': spec.url,
-            'source': spec.sources[0],
+            'source': origspec.sources[0],
+            'exsources': exdata['sources'],
             'fontconfig': exdata['fontconfig'][family],
             'license': spec.license,
             'license_file': ' '.join(exdata['licenses']),
