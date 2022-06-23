@@ -141,9 +141,9 @@ class File:
             return self.__name(self.realname)
         else:
             if u.fragment:
-                return self.__name(u.fragment)
+                return Path(u.fragment).name
             else:
-                return self.__name(u.path)
+                return Path(u.path).name
 
     @property
     def realname(self):
