@@ -71,8 +71,8 @@ Source0:  {{ source }}
 # Adjust as necessary. Keeping the filename in sync with the package name is a good idea.
 # See the fontconfig templates in fonts-rpm-templates for information on how to
 # write good fontconfig files and choose the correct priority [number].
-Source10: {{ fontconfig }}{% set v = [20] %}{% for s in exsources %}
-Source{{ v[0] }}: {{ s }}{% set _ = v.append(v[0] + 1) %}{% set _ = v.pop(0) %}{% endfor %}
+Source10: {{ fontconfig }}{% for s in exsources %}
+Source{{ nsources[s] }}: {{ s }}{% endfor %}
 
 %fontpkg
 
