@@ -22,6 +22,7 @@
 import argparse
 import sys
 from pyfontrpmspec import converter
+from pyfontrpmspec import package
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Fonts RPM spec file converter against guidelines',
@@ -44,5 +45,11 @@ if __name__ == '__main__':
         sys.exit(1)
 
     args.output.write(templates['spec'])
+    args.output.close()
+    if args.output.name != '<stdout>':
+        pkg = package.Package()
+        r = pkg.source_name(args.output.name)
+        if r != args.output.name:
+            print('Proposed spec filename is: {}'.format(r))
 
     print('Note: You have to review the result. this doesn\'t guarantee the generated spec file can be built as is.', flush=True, file=sys.stderr)
