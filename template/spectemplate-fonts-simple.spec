@@ -67,6 +67,7 @@ URL:     {{ url }}
 {{ description }}
 }
 
+# {{ origsource }}
 Source0:  {{ source }}
 # Adjust as necessary. Keeping the filename in sync with the package name is a good idea.
 # See the fontconfig templates in fonts-rpm-templates for information on how to
