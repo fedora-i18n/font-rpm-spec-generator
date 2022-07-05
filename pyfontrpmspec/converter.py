@@ -17,6 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import argparse
 import shutil
 import subprocess
 import sys
@@ -24,6 +25,7 @@ from pyrpm.spec import Spec
 from pyfontrpmspec import font_reader as fr
 from pyfontrpmspec import sources as src
 from pyfontrpmspec import template
+from pyfontrpmspec import package
 
 def old2new(specfile, args):
     if not shutil.which('rpmspec'):
@@ -141,3 +143,33 @@ def old2new(specfile, args):
         print('Multiple sub-packages not yet supported', flush=True, file=sys.stderr)
 
     return templates
+
+def main():
+    parser = argparse.ArgumentParser(description='Fonts RPM spec file converter against guidelines',
+                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+
+    parser.add_argument('--sourcedir',
+                        default='.',
+                        help='Source directory')
+    parser.add_argument('-o', '--output',
+                        default='-',
+                        type=argparse.FileType('w'),
+                        help='Output file')
+    parser.add_argument('SPEC',
+                        help='Spec file to convert')
+
+    args = parser.parse_args()
+
+    templates = old2new(args.SPEC, args)
+    if templates is None:
+        sys.exit(1)
+
+    args.output.write(templates['spec'])
+    args.output.close()
+    if args.output.name != '<stdout>':
+        pkg = package.Package()
+        r = pkg.source_name(args.output.name)
+        if r != args.output.name:
+            print('Proposed spec filename is: {}'.format(r))
+
+    print('Note: You have to review the result. this doesn\'t guarantee the generated spec file can be built as is.', flush=True, file=sys.stderr)
