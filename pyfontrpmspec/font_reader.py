@@ -19,7 +19,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from fontTools.ttLib import TTFont
-import sys
 
 NAME_TABLE = {
     0: 'CopyrightNotice',
@@ -63,17 +62,13 @@ def transform_foundry(id):
 
 def font_meta_reader(fontfile, font_number = 0):
     meta_data = dict()
-    try:
-        font = TTFont(fontfile, fontNumber = font_number)
-        # variable fmd denotes font meta data or fonts meta attributes
-        for fmd in font['name'].names:
-            if (fmd.platformID == 3 and fmd.langID == 0x0409) or (fmd.platformID == 1 and fmd.langID == 0):
-                meta_data[NAME_TABLE.get(fmd.nameID, False)] = fmd.toStr()
-        meta_data['foundry'] = transform_foundry(font['OS/2'].achVendID)
-        return meta_data
-    except FileNotFoundError:
-        print('invalid font file path: {}'.format(fontfile), flush=True, file=sys.stderr)
-        sys.exit(1)
+    font = TTFont(fontfile, fontNumber = font_number)
+    # variable fmd denotes font meta data or fonts meta attributes
+    for fmd in font['name'].names:
+        if (fmd.platformID == 3 and fmd.langID == 0x0409) or (fmd.platformID == 1 and fmd.langID == 0):
+            meta_data[NAME_TABLE.get(fmd.nameID, False)] = fmd.toStr()
+    meta_data['foundry'] = transform_foundry(font['OS/2'].achVendID)
+    return meta_data
 
 if __name__ == "__main__":
     fontfile = "/home/vvijayra/git_projects/liberation-fonts/liberation-fonts-ttf-2.1.5/LiberationSans-Bold.ttf"
