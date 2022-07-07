@@ -97,6 +97,9 @@ def old2new(specfile, args):
         raise TypeError(m().error('No fonts files detected'))
     if 'fontconfig' not in exdata:
         raise TypeError(m().error('No fontconfig files detected'))
+    if len(spec.patches) > 1:
+        for p in spec.patches:
+            m([': ']).info(p).warning('Ignoring patch file. they have to be done manually.').out()
 
     if not exdata['archive']:
         exdata['setup'] = '-c -T'
@@ -130,6 +133,7 @@ def old2new(specfile, args):
             'copy_source': not exdata['archive'],
             'exsources': exdata['sources'],
             'nsources': exdata['nsources'],
+            'patches': spec.patches,
             'fontconfig': exdata['fontconfig'][family].name,
             'license': spec.license,
             'license_file': ' '.join([s.name for s in exdata['licenses']]),
