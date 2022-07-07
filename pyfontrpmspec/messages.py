@@ -36,17 +36,17 @@ class Message:
 
     def error(self, msg):
         self.__add_joiner()
-        self._message += colored(msg, 'red')
+        self._message += colored(str(msg), 'red')
         return self
 
     def warning(self, msg):
         self.__add_joiner()
-        self._message += colored(msg, 'yellow')
+        self._message += colored(str(msg), 'yellow')
         return self
 
     def info(self, msg):
         self.__add_joiner()
-        self._message += colored(msg, 'green')
+        self._message += colored(str(msg), 'green')
         return self
 
     def ignored(self):
@@ -56,7 +56,7 @@ class Message:
 
     def message(self, msg):
         self.__add_joiner()
-        self._message += msg
+        self._message += str(msg)
         return self
 
     def out(self):
