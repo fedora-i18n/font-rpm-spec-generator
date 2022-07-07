@@ -42,5 +42,6 @@ setuptools.setup(
     install_requires=[
         'fonttools',
         'jinja2',
+        'termcolor',
     ],
 )

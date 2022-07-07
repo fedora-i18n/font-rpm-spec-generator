@@ -19,6 +19,7 @@
 
 import shutil
 import subprocess
+from pyfontrpmspec.messages import Message as m
 from pyrpm.spec import Spec
 
 class Package:
@@ -26,9 +27,9 @@ class Package:
     def source_name(self, src):
         if src.endswith('.spec'):
             if not shutil.which('rpmspec'):
-                raise AttributeError('rpmspec is not installed')
+                raise AttributeError(m().error('rpmspec is not installed'))
             ss = subprocess.run(['rpmspec', '-P', src], stdout=subprocess.PIPE)
             spec = Spec.from_string(ss.stdout.decode('utf-8'))
             return spec.name
         else:
-            raise AttributeError('Unsupported filetype {}'.format(src))
+            raise AttributeError(m().error('Unsupported filetype:').message(src))

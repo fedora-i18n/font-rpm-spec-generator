@@ -24,6 +24,7 @@ import sys
 import tempfile
 from lxml import etree
 from pathlib import Path
+from pyfontrpmspec.messages import Message as m
 from urllib.parse import urlparse
 
 class Sources:
@@ -183,7 +184,7 @@ class File:
                 if not family_list:
                     family_list = tree.xpath('/fontconfig/match/edit[@name=\'family\']/string/text()')
                     if not family_list:
-                        raise ValueError('Unable to guess the targeted family name')
+                        raise ValueError(m([': ']).info(self.name).error('Unable to guess the targeted family name'))
                 family_list = list(set(family_list))
                 family_list.sort(key=lambda s: len(s))
                 if len(family_list) > 1:
@@ -193,7 +194,7 @@ class File:
                         if not re.search(r'^{}'.format(basename), f):
                             error.append(f)
                     if len(error):
-                        print('Different family names detected: {}'.format(error), flush=True, file=sys.stderr)
+                        m([': ']).warning('Different family names detected').message(error).out()
                 self.__families = family_list
                 return self.__families
             else:
