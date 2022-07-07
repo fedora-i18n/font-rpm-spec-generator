@@ -67,6 +67,8 @@ class Source:
             self._tempdir.cleanup()
 
     def __iter__(self):
+        if not Path(self.fullname).exists():
+            raise FileNotFoundError(m([': ']).info(self.name).error('file not found'))
         self._tempdir = tempfile.TemporaryDirectory()
         try:
             shutil.unpack_archive(self.fullname, self._tempdir.name)
@@ -194,7 +196,7 @@ class File:
                         if not re.search(r'^{}'.format(basename), f):
                             error.append(f)
                     if len(error):
-                        m([': ']).warning('Different family names detected').message(error).out()
+                        m([': ']).info(self.name).warning('Different family names detected').message(error).out()
                 self.__families = family_list
                 return self.__families
             else:
