@@ -142,9 +142,9 @@ def old2new(specfile, args):
             'foundry': exdata['foundry'],
             'family': family,
             'summary': spec.summary,
-            'description': spec.description,
+            'description': spec.description.rstrip(),
             'setup': exdata['setup'],
-            'changelog': spec.changelog,
+            'changelog': spec.changelog.rstrip(),
         }
         templates = template.get(1, data)
     else:
