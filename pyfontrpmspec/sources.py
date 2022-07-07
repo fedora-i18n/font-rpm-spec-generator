@@ -231,6 +231,17 @@ class File:
     def is_source(self):
         return self.__is_source
 
+    def is_appstream_file(self):
+        if self.name.endswith('.xml'):
+            tree = etree.parse(self.fullname)
+            s = tree.xpath('/component[@type="font"]')
+            if not s:
+                return False
+            else:
+                return True
+        else:
+            return False
+
 if __name__ == '__main__':
     s = Source('./foo.zip')
     for x in s:
