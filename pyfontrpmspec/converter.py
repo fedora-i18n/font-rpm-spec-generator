@@ -180,7 +180,7 @@ def main():
         if r != args.output.name:
             m().message('Proposed spec filename is').info(r).out()
 
-    m([': ', ' ']).warning('Note').message('You have to review the result. this doesn\'t guarantee the generated spec file can be built as is.').out()
+    m([': ', ' ']).warning('Note').message('You have to review the result. this doesn\'t guarantee that the generated spec file can be necessarily built properly.').out()
 
 if __name__ == '__main__':
     main()
