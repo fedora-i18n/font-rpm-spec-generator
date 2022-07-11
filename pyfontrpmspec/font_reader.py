@@ -18,6 +18,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import re
 from fontTools.ttLib import TTFont
 
 NAME_TABLE = {
@@ -57,6 +58,7 @@ def transform_foundry(id):
     '''
     FOUNDARIES = {
         'ADBO': 'adobe',
+        'MTY': 'motoya',
     }
     return FOUNDARIES[id] if id in FOUNDARIES else id
 
@@ -68,7 +70,30 @@ def font_meta_reader(fontfile, font_number = 0):
         if (fmd.platformID == 3 and fmd.langID == 0x0409) or (fmd.platformID == 1 and fmd.langID == 0):
             meta_data[NAME_TABLE.get(fmd.nameID, False)] = fmd.toStr()
     meta_data['foundry'] = transform_foundry(font['OS/2'].achVendID)
+    meta_data['family'] = get_better_family(meta_data)
     return meta_data
+
+def get_better_family(meta):
+    if 'WWS_Family_Name' in meta:
+        family = meta['WWS_Family_Name']
+    elif 'Typographic_Family' in meta:
+        family = meta['Typographic_Family']
+    else:
+        family = meta['Font_Family']
+    return family
+
+def group(families):
+    retval = {}
+    x = sorted(families.items(), key=lambda x: len(x[1]['family']))
+    for k, v in x:
+        found = False
+        for f in retval.keys():
+            if re.match(r'{}'.format(f), v['family']):
+                retval[v['family']].append({'fontinfo': v, 'file': k})
+                found = True
+        if not found:
+            retval[v['family']] = [{'fontinfo': v, 'file': k}]
+    return retval
 
 if __name__ == "__main__":
     fontfile = "/home/vvijayra/git_projects/liberation-fonts/liberation-fonts-ttf-2.1.5/LiberationSans-Bold.ttf"
