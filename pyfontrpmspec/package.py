@@ -17,6 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import re
 import shutil
 import subprocess
 from pyfontrpmspec.messages import Message as m
@@ -24,7 +25,8 @@ from pyrpm.spec import Spec
 
 class Package:
 
-    def source_name(self, src):
+    @staticmethod
+    def source_name(src):
         if src.endswith('.spec'):
             if not shutil.which('rpmspec'):
                 raise AttributeError(m().error('rpmspec is not installed'))
@@ -33,3 +35,7 @@ class Package:
             return spec.name
         else:
             raise AttributeError(m().error('Unsupported filetype:').message(src))
+
+    @staticmethod
+    def is_targeted_package(pkg, family):
+        return re.search(r'{}'.format(family.replace(' ', '').lower()), pkg.replace('-', '').lower()) != None

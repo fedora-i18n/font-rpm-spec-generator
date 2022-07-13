@@ -27,6 +27,6 @@ def get(npkgs, data):
     if npkgs == 1:
         template['spec'] = env.get_template('spectemplate-fonts-simple.spec').render(data)
     else:
-        None
+        template['spec'] = env.get_template('spectemplate-fonts-multi.spec').render(data)
 
     return template

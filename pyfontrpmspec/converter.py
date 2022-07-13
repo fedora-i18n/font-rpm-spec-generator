@@ -26,7 +26,7 @@ from pyfontrpmspec import font_reader as fr
 from pyfontrpmspec.messages import Message as m
 from pyfontrpmspec import sources as src
 from pyfontrpmspec import template
-from pyfontrpmspec import package
+from pyfontrpmspec.package import Package
 
 def old2new(specfile, args):
     if not shutil.which('rpmspec'):
@@ -99,7 +99,7 @@ def old2new(specfile, args):
         raise TypeError(m().error('No fontconfig files detected'))
     if len(spec.patches) > 1:
         for p in spec.patches:
-            m([': ']).info(p).warning('Ignoring patch file. they have to be done manually.').out()
+            m([': ']).info(p).warning('Ignoring patch file. they have to be done manually').out()
 
     if not exdata['archive']:
         exdata['setup'] = '-c -T'
@@ -113,12 +113,7 @@ def old2new(specfile, args):
     if len(spec.packages) == 1:
         package = spec.packages[0]
         fontinfo = exdata['fontinfo'][list(exdata['fontinfo'].keys())[0]]
-        if 'WWS_Family_Name' in fontinfo:
-            family = fontinfo['WWS_Family_Name']
-        elif 'Typographic_Family' in fontinfo:
-            family = fontinfo['Typographic_Family']
-        else:
-            family = fontinfo['Font_Family']
+        family = fontinfo['family']
         if len(exdata['fontconfig']) > 1:
             raise TypeError(m().error('Multiple fontconfig files detected'))
         if family not in exdata['fontconfig']:
@@ -146,11 +141,56 @@ def old2new(specfile, args):
             'setup': exdata['setup'],
             'changelog': spec.changelog.rstrip(),
         }
-        templates = template.get(1, data)
     else:
-        m().error('Multiple sub-packages not yet supported').out()
+        families = []
+        fontconfig = []
+        for k, v in fr.group(exdata['fontinfo']).items():
+            summary = None
+            description = None
+            for p in spec.packages:
+                if Package.is_targeted_package(p.name, k):
+                    if p.name == spec.name:
+                        summary = spec.summary
+                        description = spec.description
+                    else:
+                        summary = p.summary
+                        description = p.description
+            if not summary:
+                m([': ']).info(k).warning('Unable to guess the existing package name. some information may be missing in the spec file').out()
+            if not exdata['fontconfig'][k]:
+                m([': ']).info(k).warning('No fontconfig file')
+            info = {
+                'family': k,
+                'summary': summary,
+                'fonts': ' '.join([vv['file'] for vv in v]),
+                'exfonts': '%{nil}',
+                'conf': len(families) + 10 if exdata['fontconfig'][k] else '%{nil}',
+                'exconf': '%{nil}',
+                'description': description,
+            }
+            families.append(info)
+            fontconfig.append(exdata['fontconfig'][k].name)
+        data = {
+            'version': spec.version,
+            'release': origspec.release,
+            'url': spec.url,
+            'origsource': origspec.sources[0],
+            'source': spec.sources[0],
+            'copy_source': not exdata['archive'],
+            'exsources': exdata['sources'],
+            'nsources': exdata['nsources'],
+            'patches': spec.patches,
+            'license': spec.license,
+            'license_file': ' '.join([s.name for s in exdata['licenses']]),
+            'docs': ' '.join([s.name for s in exdata['docs']]) if 'docs' in exdata else '%{nil}',
+            'foundry': exdata['foundry'],
+            'fonts': families,
+            'fontconfig': fontconfig,
+            'setup': exdata['setup'],
+            'changelog': spec.changelog.rstrip(),
+        }
 
-    return templates
+    return template.get(len(spec.packages), data)
 
 def main():
     parser = argparse.ArgumentParser(description='Fonts RPM spec file converter against guidelines',
@@ -174,9 +214,9 @@ def main():
 
     args.output.write(templates['spec'])
     args.output.close()
+    print('\n', flush=True, file=sys.stderr)
     if args.output.name != '<stdout>':
-        pkg = package.Package()
-        r = pkg.source_name(args.output.name)
+        r = Package.source_name(args.output.name)
         if r != args.output.name:
             m().message('Proposed spec filename is').info(r).out()
 
