@@ -187,7 +187,7 @@ def old2new(specfile, args):
             'fonts': families,
             'fontconfig': fontconfig,
             'setup': exdata['setup'],
-            'changelog': spec.changelog.rstrip(),
+            'changelog': origspec.changelog.rstrip(),
         }
 
     return template.get(len(spec.packages), data)
