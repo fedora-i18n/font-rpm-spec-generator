@@ -218,7 +218,7 @@ def main():
     if args.output.name != '<stdout>':
         r = Package.source_name(args.output.name)
         if r != args.output.name:
-            m().message('Proposed spec filename is').info(r).out()
+            m().message('Proposed spec filename is').info(r+'.spec').out()
 
     m([': ', ' ']).warning('Note').message('You have to review the result. this doesn\'t guarantee that the generated spec file can be necessarily built properly.').out()
 
