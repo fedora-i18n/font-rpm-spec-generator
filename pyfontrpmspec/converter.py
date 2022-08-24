@@ -139,7 +139,7 @@ def old2new(specfile, args):
             'summary': spec.summary,
             'description': spec.description.rstrip(),
             'setup': exdata['setup'],
-            'changelog': spec.changelog.rstrip(),
+            'changelog': origspec.changelog.rstrip(),
         }
     else:
         families = []
