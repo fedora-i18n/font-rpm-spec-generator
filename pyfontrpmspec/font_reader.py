@@ -58,7 +58,7 @@ def transform_foundry(id):
     '''
     FOUNDARIES = {
         'ADBO': 'adobe',
-        'MTY': 'motoya',
+        'MTY ': 'Motoya',
     }
     return FOUNDARIES[id] if id in FOUNDARIES else id
 
