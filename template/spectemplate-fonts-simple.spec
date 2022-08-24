@@ -33,6 +33,7 @@
 Version: {{ version }}
 Release: {{ release }}
 URL:     {{ url }}
+BuildRequires: fonts-rpm-macros >= 1:2.0.5-9
 
 # The identifier of the entity, that released the font family.
 %global foundry           {{ foundry }}
