@@ -44,7 +44,7 @@ BuildRequires: fonts-rpm-macros >= 1:2.0.5-9
 %global fontsex{{ n }}          {{ fonts[n]['exfonts'] }}
 %global fontconfs{{ n }}        %{SOURCE{{ fonts[n]['conf'] }}}
 %global fontconfsex{{ n }}      {{ fonts[n]['exconf'] }}
-%global fontdescription0  %{expand:
+%global fontdescription{{ n }}  %{expand:
 %{common_description}
 {{ fonts[n]['description'] }}
 }
