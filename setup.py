@@ -42,6 +42,7 @@ setuptools.setup(
     install_requires=[
         'fonttools',
         'jinja2',
+        'lxml',
         'python-rpm-spec>=0.12',
         'termcolor',
     ],
