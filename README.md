@@ -3,7 +3,7 @@ This tool generates RPM [specfile](https://docs.fedoraproject.org/en-US/packagin
 
 ## setup & use
 ```
-$ pip3 install -r requirements.txt
+$ python3 setup.py install --user
 ```
 
 ## usage
@@ -23,6 +23,23 @@ options:
   -u URL, --url URL     	 	Font Project URL
   -S SOURCE, --source SOURCE
                         					Font source tar or path
+```
+
+### fontrpmspec-conv
+```
+usage: fontrpmspec-conv [-h] [--sourcedir SOURCEDIR] [-o OUTPUT] SPEC
+
+Fonts RPM spec file converter against guidelines
+
+positional arguments:
+  SPEC                  Spec file to convert
+
+options:
+  -h, --help            show this help message and exit
+  --sourcedir SOURCEDIR
+                        Source directory (default: .)
+  -o OUTPUT, --output OUTPUT
+                        Output file (default: -)
 ```
 
 Note:
