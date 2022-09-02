@@ -182,7 +182,7 @@ class File:
         if self.is_fontconfig():
             if self.__families is None:
                 tree = etree.parse(self.fullname)
-                family_list = tree.xpath('/fontconfig/alias/family/text()')
+                family_list = tree.xpath('/fontconfig/alias[not(descendant::prefer)]/family/text()')
                 if not family_list:
                     family_list = tree.xpath('/fontconfig/match/edit[@name=\'family\']/string/text()')
                     if not family_list:
