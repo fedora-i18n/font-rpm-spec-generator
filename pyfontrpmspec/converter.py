@@ -55,6 +55,10 @@ def old2new(specfile, args):
                 if sf.family in exdata['fontconfig']:
                     m([': ', ' ']).info(sf.family).warning('Duplicate family name').out()
                 exdata['fontconfig'][sf.family] = sf
+                if 'fontmap' not in exdata:
+                    exdata['fontmap'] = {}
+                if sf.has_family_map():
+                    exdata['fontmap'].update(sf.family_map())
                 if not source.is_archive():
                     source.ignore = True
             elif sf.is_font():
@@ -147,6 +151,8 @@ def old2new(specfile, args):
         families = []
         fontconfig = []
         for k, v in fr.group(exdata['fontinfo']).items():
+            if 'fontmap' in exdata and k in exdata['fontmap']:
+                k = exdata['fontmap'][k]
             summary = None
             description = None
             for p in spec.packages:
@@ -159,19 +165,20 @@ def old2new(specfile, args):
                         description = p.description
             if not summary:
                 m([': ']).info(k).warning('Unable to guess the existing package name. some information may be missing in the spec file').out()
-            if not exdata['fontconfig'][k]:
+            if not k in exdata['fontconfig']:
                 m([': ']).info(k).warning('No fontconfig file')
             info = {
                 'family': k,
                 'summary': summary,
                 'fonts': ' '.join([vv['file'] for vv in v]),
                 'exfonts': '%{nil}',
-                'conf': len(families) + 10 if exdata['fontconfig'][k] else '%{nil}',
+                'conf': len(families) + 10 if k in exdata['fontconfig'] else '%{nil}',
                 'exconf': '%{nil}',
                 'description': description,
             }
             families.append(info)
-            fontconfig.append(exdata['fontconfig'][k].name)
+            if k in exdata['fontconfig']:
+                fontconfig.append(exdata['fontconfig'][k].name)
         data = {
             'version': spec.version,
             'release': origspec.release,
@@ -219,7 +226,9 @@ def main():
     print('\n', flush=True, file=sys.stderr)
     if args.output.name != '<stdout>':
         r = Package.source_name(args.output.name)
-        if r + '.spec' != args.output.name:
+        if r is None:
+            m().warning('Unable to guess the spec filename').out()
+        elif r + '.spec' != args.output.name:
             m().message('Proposed spec filename is').info(r+'.spec').out()
 
     m([': ', ' ']).warning('Note').message('You have to review the result. this doesn\'t guarantee that the generated spec file can be necessarily built properly.').out()

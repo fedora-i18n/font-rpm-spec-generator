@@ -187,6 +187,12 @@ class File:
                     family_list = tree.xpath('/fontconfig/match/edit[@name=\'family\']/string/text()')
                     if not family_list:
                         raise ValueError(m([': ']).info(self.name).error('Unable to guess the targeted family name'))
+                fmap = self.family_map()
+                if fmap:
+                    for k, v in fmap.items():
+                        if k in family_list:
+                            family_list.append(v)
+
                 family_list = list(set(family_list))
                 family_list.sort(key=lambda s: len(s))
                 if len(family_list) > 1:
@@ -230,6 +236,24 @@ class File:
             return True
         else:
             return False
+
+    def has_family_map(self):
+        return self.family_map() != None
+
+    def family_map(self):
+        if not self.is_fontconfig():
+            return None
+        else:
+            tree = etree.parse(self.fullname)
+            mapfrom = tree.xpath('/fontconfig/match[@target=\'scan\']/test[@name=\'family\']/string/text()')
+            mapto = tree.xpath('/fontconfig/match[@target=\'scan\']/edit[@name=\'family\']/string/text()')
+            if len(mapfrom) != len(mapto):
+                return None
+            else:
+                familymap = {}
+                for i in range(len(mapfrom)):
+                    familymap[mapfrom[i]] = mapto[i]
+                return familymap
 
     def is_source(self):
         return self.__is_source
