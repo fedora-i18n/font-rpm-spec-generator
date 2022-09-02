@@ -32,6 +32,9 @@ setuptools.setup(
     author='Fedora I18N team',
     author_email='i18n@lists.fedoraproject.org',
     packages=setuptools.find_packages(),
+    data_files = [
+        ('template', ['template/spectemplate-fonts-simple.spec', 'template/spectemplate-fonts-multi.spec']),
+    ],
     entry_points = {
         'console_scripts': [
             'fontrpmspec-conv=pyfontrpmspec.converter:main',
