@@ -38,4 +38,4 @@ class Package:
 
     @staticmethod
     def is_targeted_package(pkg, family):
-        return re.search(r'{}'.format(family.replace(' ', '').lower()), pkg.replace('-', '').lower()) != None
+        return re.fullmatch(r'{}'.format(family.replace(' ', '').lower()), pkg.replace('-fonts','').replace('-', '').lower()) != None
