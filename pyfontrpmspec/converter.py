@@ -18,9 +18,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import argparse
+import os
 import shutil
 import subprocess
 import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir)))
 from pyrpm.spec import Spec
 from pyfontrpmspec import font_reader as fr
 from pyfontrpmspec.messages import Message as m
