@@ -18,10 +18,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from jinja2 import Environment, FileSystemLoader
+from pathlib import Path
 
 def get(npkgs, data):
-    file_loader = FileSystemLoader('template')
-    env = Environment(loader=file_loader)
+    ptempl = Path(__file__).resolve().parents[0].with_name('template')
+    env = Environment(loader=FileSystemLoader(str(ptempl)))
     template = {}
 
     if npkgs == 1:
