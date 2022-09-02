@@ -88,7 +88,7 @@ def group(families):
     for k, v in x:
         found = False
         for f in retval.keys():
-            if re.match(r'{}'.format(f), v['family']):
+            if re.fullmatch(r'{}'.format(f), v['family']):
                 retval[v['family']].append({'fontinfo': v, 'file': k})
                 found = True
         if not found:
