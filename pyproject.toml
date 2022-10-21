@@ -1,0 +1,51 @@
+[build-system]
+requires = ["setuptools >= 61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fontrpmspec"
+version = "0.1"
+authors = [
+  { name = "Fedora I18N team", email="i18n@lists.fedoraproject.org" }
+]
+description = "Font packaging library in Fedora"
+readme = "README.md"
+requires-python = ">= 3.11"
+license.file = "LICENSE"
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Environment :: Console",
+  "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+  "Operating System :: POSIX :: Linux",
+  "Programming Language :: Python :: 3",
+]
+keywords = [
+  "fedora",
+  "fonts",
+  "packaging",
+]
+dependencies = [
+  "fonttools",
+  "jinja2",
+  "lxml",
+  "python-rpm-spec>=0.12",
+  "termcolor",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/fedora-i18n/font-rpm-spec-generator"
+"Bug Tracker" = "https://github.com/fedora-i18n/font-rpm-spec-generator/issues"
+
+[project.entry-points.console_scripts]
+"fontrpmspec-conv" = "pyfontrpmspec.converter:main"
+"fontrpmspec-gen" = "pyfontrpmspec.generator:main"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+namespaces = true
+exclude = [ "tests" ]
+
+[tool.setuptools.package-data]
+"pyfontrpmspec.template" = [ "spectemplate-fonts-simple.spec", "spectemplate-fonts-multi.spec" ]

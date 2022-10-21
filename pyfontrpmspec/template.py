@@ -18,11 +18,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from jinja2 import Environment, FileSystemLoader
-from pathlib import Path
+from importlib.resources import files
 
 def get(npkgs, data):
-    ptempl = Path(__file__).resolve().parents[0].with_name('template')
-    env = Environment(loader=FileSystemLoader(str(ptempl)))
+    try:
+        ptempl = files('pyfontrpmspec.template').name()
+    except TypeError:
+        ptempl = files('pyfontrpmspec').joinpath('template')
+    env = Environment(loader=FileSystemLoader(ptempl))
     template = {}
 
     if npkgs == 1:
