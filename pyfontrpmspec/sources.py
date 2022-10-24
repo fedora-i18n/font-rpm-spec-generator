@@ -24,6 +24,7 @@ import sys
 import tempfile
 from lxml import etree
 from pathlib import Path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir)))
 from pyfontrpmspec.messages import Message as m
 from urllib.parse import urlparse
 
