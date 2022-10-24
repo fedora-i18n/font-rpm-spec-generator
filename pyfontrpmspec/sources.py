@@ -218,7 +218,7 @@ class File:
             return False
 
     def is_doc(self):
-        if re.search(r'(?i:readme)', self.name):
+        if re.search(r'(?i:readme|news*)', self.name):
             return True
         elif self.name.endswith('.txt'):
             return True
