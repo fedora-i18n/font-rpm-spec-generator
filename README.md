@@ -3,7 +3,8 @@ This tool generates RPM [specfile](https://docs.fedoraproject.org/en-US/packagin
 
 ## setup & use
 ```
-$ python3 setup.py install --user
+$ python3 -m build
+$ pip3 install --user dist/fontrpmspec*.whl
 ```
 
 ## usage
