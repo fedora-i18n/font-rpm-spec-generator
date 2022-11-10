@@ -26,6 +26,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), os.pa
 from pyfontrpmspec.messages import Message as m
 from pyrpm.spec import Spec
 
+
 class Package:
 
     @staticmethod
@@ -41,4 +42,4 @@ class Package:
 
     @staticmethod
     def is_targeted_package(pkg, family):
-        return re.fullmatch(r'{}'.format(family.replace(' ', '').lower()), pkg.replace('-fonts','').replace('-', '').lower()) != None
+        return re.fullmatch(r'{}'.format(family.replace(' ', '').lower()), pkg.replace('-fonts', '').replace('-', '').lower()) is not None

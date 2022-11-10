@@ -49,22 +49,27 @@ NAME_TABLE = {
     24: 'Dark_Background_Pallete',
     25: 'Variations_PostScript_Name_Prefix'
     }
-    
+
+
 def transform_foundry(id):
-    '''
+    """
+    """
+
+    """
     4 letter characters from OS/2 table isn't hard to recognize what it is.
     particularly foundry property in macro affects the package name.
     mapping it to the human readable/recognizable name.
-    '''
+    """
     FOUNDARIES = {
         'ADBO': 'adobe',
         'MTY ': 'Motoya',
     }
     return FOUNDARIES[id] if id in FOUNDARIES else id
 
-def font_meta_reader(fontfile, font_number = 0):
+
+def font_meta_reader(fontfile, font_number=0):
     meta_data = dict()
-    font = TTFont(fontfile, fontNumber = font_number)
+    font = TTFont(fontfile, fontNumber=font_number)
     # variable fmd denotes font meta data or fonts meta attributes
     for fmd in font['name'].names:
         if (fmd.platformID == 3 and fmd.langID == 0x0409) or (fmd.platformID == 1 and fmd.langID == 0):
@@ -72,6 +77,7 @@ def font_meta_reader(fontfile, font_number = 0):
     meta_data['foundry'] = transform_foundry(font['OS/2'].achVendID)
     meta_data['family'] = get_better_family(meta_data)
     return meta_data
+
 
 def get_better_family(meta):
     if 'WWS_Family_Name' in meta:
@@ -81,6 +87,7 @@ def get_better_family(meta):
     else:
         family = meta['Font_Family']
     return family
+
 
 def group(families):
     retval = {}
@@ -94,6 +101,7 @@ def group(families):
         if not found:
             retval[v['family']] = [{'fontinfo': v, 'file': k}]
     return retval
+
 
 if __name__ == "__main__":
     fontfile = "/home/vvijayra/git_projects/liberation-fonts/liberation-fonts-ttf-2.1.5/LiberationSans-Bold.ttf"

@@ -20,6 +20,7 @@
 from jinja2 import Environment, FileSystemLoader
 from importlib.resources import files
 
+
 def get(npkgs, data):
     try:
         ptempl = files('pyfontrpmspec.template').name()

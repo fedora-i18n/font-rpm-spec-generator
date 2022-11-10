@@ -20,9 +20,10 @@
 import sys
 from termcolor import colored
 
+
 class Message:
 
-    def __init__(self, joiner = [' ']):
+    def __init__(self, joiner=[' ']):
         self._message = None
         self.__joiner = joiner
         self.__njoiner = 0
@@ -64,6 +65,7 @@ class Message:
 
     def __str__(self):
         return self._message
+
 
 if __name__ == '__main__':
     Message([': ', ' ']).info('foo').warning('duplicate').out()
