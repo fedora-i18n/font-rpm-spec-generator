@@ -17,12 +17,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import os
 import re
 import shutil
 import subprocess
-import sys
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir)))
+import _debugpath
 from pyfontrpmspec.messages import Message as m
 from pyrpm.spec import Spec
 
@@ -38,8 +36,12 @@ class Package:
             spec = Spec.from_string(ss.stdout.decode('utf-8'))
             return spec.name
         else:
-            raise AttributeError(m().error('Unsupported filetype:').message(src))
+            raise AttributeError(
+                m().error('Unsupported filetype:').message(src))
 
     @staticmethod
     def is_targeted_package(pkg, family):
-        return re.fullmatch(r'{}'.format(family.replace(' ', '').lower()), pkg.replace('-fonts', '').replace('-', '').lower()) is not None
+        return re.fullmatch(r'{}'.format(family.replace(' ', '').lower()),
+                            pkg.replace('-fonts',
+                                        '').replace('-',
+                                                    '').lower()) is not None

@@ -20,11 +20,10 @@
 import os
 import re
 import shutil
-import sys
 import tempfile
 from lxml import etree
 from pathlib import Path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir)))
+import _debugpath
 from pyfontrpmspec import font_reader as fr
 from pyfontrpmspec.messages import Message as m
 from urllib.parse import urlparse
@@ -43,7 +42,7 @@ class Sources:
         if sourcedir is None:
             sourcedir = self.__sourcedir
         self._sources.append(Source(fn, sourcedir=sourcedir))
-        return len(self._sources)-1
+        return len(self._sources) - 1
 
     def get(self, idx):
         return self._sources[idx]
@@ -72,13 +71,16 @@ class Source:
 
     def __iter__(self):
         if not Path(self.fullname).exists():
-            raise FileNotFoundError(m([': ']).info(self.name).error('file not found'))
+            raise FileNotFoundError(
+                m([': ']).info(self.name).error('file not found'))
         self._tempdir = tempfile.TemporaryDirectory()
         try:
             shutil.unpack_archive(self.fullname, self._tempdir.name)
             self._is_archive = True
             for root, dirs, files in os.walk(self._tempdir.name):
-                self._root = str(Path(*Path(root).relative_to(self._tempdir.name).parts[:1]))
+                self._root = str(
+                    Path(
+                        *Path(root).relative_to(self._tempdir.name).parts[:1]))
                 for n in files:
                     fn = str(Path(root).relative_to(self._tempdir.name) / n)
                     yield File(fn, self._tempdir.name)
@@ -187,11 +189,16 @@ class File:
         if self.is_fontconfig():
             if self.__families is None:
                 tree = etree.parse(self.fullname)
-                family_list = tree.xpath('/fontconfig/alias[not(descendant::prefer)]/family/text()')
+                family_list = tree.xpath(
+                    '/fontconfig/alias[not(descendant::prefer)]/family/text()')
                 if not family_list:
-                    family_list = tree.xpath('/fontconfig/match/edit[@name=\'family\']/string/text()')
+                    family_list = tree.xpath(
+                        '/fontconfig/match/edit[@name=\'family\']/string/text()'
+                    )
                     if not family_list:
-                        raise ValueError(m([': ']).info(self.name).error('Unable to guess the targeted family name'))
+                        raise ValueError(
+                            m([': ']).info(self.name).error(
+                                'Unable to guess the targeted family name'))
                 fmap = self.family_map()
                 if fmap:
                     for k, v in fmap.items():
@@ -207,7 +214,9 @@ class File:
                         if not re.search(r'^{}'.format(basename), f):
                             error.append(f)
                     if len(error):
-                        m([': ']).info(self.name).warning('Different family names detected').message(error).out()
+                        m([': ']).info(self.name).warning(
+                            'Different family names detected').message(
+                                error).out()
                 self.__families = family_list
                 return self.__families
             else:
@@ -217,7 +226,8 @@ class File:
 
     def is_license(self):
         LICENSES = ['OFL', 'MIT', 'GPL']
-        if re.search(r'(?i:license|notice)', self.name) or re.search(re.compile('|'.join(LICENSES)), self.name):
+        if re.search(r'(?i:license|notice)', self.name) or re.search(
+                re.compile('|'.join(LICENSES)), self.name):
             return True
         else:
             return False
@@ -231,13 +241,15 @@ class File:
             return False
 
     def is_font(self):
-        if self.name.endswith('.otf') or self.name.endswith('.ttf') or self.name.endswith('.ttc'):
+        if self.name.endswith('.otf') or self.name.endswith(
+                '.ttf') or self.name.endswith('.ttc'):
             return True
         else:
             return False
 
     def is_fontconfig(self):
-        if re.search(r'(?i:fontconfig)', self.name) or self.name.endswith('.conf'):
+        if re.search(r'(?i:fontconfig)',
+                     self.name) or self.name.endswith('.conf'):
             return True
         else:
             return False
@@ -250,8 +262,12 @@ class File:
             return None
         else:
             tree = etree.parse(self.fullname)
-            mapfrom = tree.xpath('/fontconfig/match[@target=\'scan\']/test[@name=\'family\']/string/text()')
-            mapto = tree.xpath('/fontconfig/match[@target=\'scan\']/edit[@name=\'family\']/string/text()')
+            mapfrom = tree.xpath(
+                '/fontconfig/match[@target=\'scan\']/test[@name=\'family\']/string/text()'
+            )
+            mapto = tree.xpath(
+                '/fontconfig/match[@target=\'scan\']/edit[@name=\'family\']/string/text()'
+            )
             if len(mapfrom) != len(mapto):
                 return None
             else:
@@ -276,24 +292,21 @@ class File:
 
 
 def extract(name, version, sources, sourcedir):
-    exdata = {'sources': [], 'nsources': {}}
+    exdata = {'sources': [], 'nsources': {}, 'docs': [], 'licenses': []}
     sources = Sources(arrays=sources, sourcedir=sourcedir)
     nsource = 20
     for source in sources:
         for sf in source:
             if sf.is_license():
-                if 'licenses' not in exdata:
-                    exdata['licenses'] = []
                 exdata['licenses'].append(sf)
             elif sf.is_doc():
-                if 'docs' not in exdata:
-                    exdata['docs'] = []
                 exdata['docs'].append(sf)
             elif sf.is_fontconfig():
                 if 'fontconfig' not in exdata:
                     exdata['fontconfig'] = {}
                 if sf.family in exdata['fontconfig']:
-                    m([': ', ' ']).info(sf.family).warning('Duplicate family name').out()
+                    m([': ', ' ']).info(
+                        sf.family).warning('Duplicate family name').out()
                 exdata['fontconfig'][sf.family] = sf
                 if 'fontmap' not in exdata:
                     exdata['fontmap'] = {}
@@ -308,25 +321,32 @@ def extract(name, version, sources, sourcedir):
                 if 'fontinfo' not in exdata:
                     exdata['fontinfo'] = {}
                 if sf.name not in exdata['fontinfo']:
-                    exdata['fontinfo'][sf.name] = fr.font_meta_reader(sf.fullname)
+                    exdata['fontinfo'][sf.name] = fr.font_meta_reader(
+                        sf.fullname)
                     exdata['foundry'] = exdata['fontinfo'][sf.name]['foundry']
                 else:
-                    m([': ', ' ']).info(sf.name).warning('Duplicate font files detected. this may not works as expected').out()
+                    m([': ', ' ']).info(sf.name).warning(
+                        'Duplicate font files detected. this may not works as expected'
+                    ).out()
                 if not source.is_archive():
                     source.ignore = True
             elif sf.is_appstream_file():
-                m([': ', ' ']).info(sf.name).warning('AppStream file is no longer needed. this will be generated by the macro automatically').out()
+                m([': ', ' ']).info(sf.name).warning(
+                    'AppStream file is no longer needed. this will be generated by the macro automatically'
+                ).out()
                 if not source.is_archive():
                     source.ignore = True
             else:
-                m([': ', ' ']).info(sf.name).warning('Unknown type of file').out()
+                m([': ',
+                   ' ']).info(sf.name).warning('Unknown type of file').out()
                 if not source.is_archive():
                     source.ignore = True
 
         if 'archive' not in exdata or exdata['archive'] is False:
             exdata['archive'] = source.is_archive()
         elif source.is_archive():
-            raise AttributeError(m().error('Multiple archives are not supported'))
+            raise AttributeError(
+                m().error('Multiple archives are not supported'))
         if 'root' not in exdata:
             if source.root != '{}-{}'.format(name, version):
                 exdata['root'] = source.root
