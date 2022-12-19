@@ -25,6 +25,7 @@ keywords = [
   "packaging",
 ]
 dependencies = [
+  "babel",
   "fonttools",
   "jinja2",
   "lxml",
