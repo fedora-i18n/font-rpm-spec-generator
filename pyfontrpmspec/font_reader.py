@@ -17,9 +17,12 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+"""Module to deal with font metadata."""
 
 import re
+import _debugpath  # noqa: F401
 from fontTools.ttLib import TTFont
+from pyfontrpmspec.messages import Message as m
 
 NAME_TABLE = {
     0: 'CopyrightNotice',
@@ -48,13 +51,23 @@ NAME_TABLE = {
     23: 'Light_Background_Pallete',
     24: 'Dark_Background_Pallete',
     25: 'Variations_PostScript_Name_Prefix'
-    }
+}
 
 
 def transform_foundry(id):
     """
-    """
+    Transform 4-character foundry string to the human-readable string.
 
+    Parameters
+    ----------
+    id: str
+        4-character foundry name
+
+    Returns
+    -------
+    str
+        Foundry name
+    """
     """
     4 letter characters from OS/2 table isn't hard to recognize what it is.
     particularly foundry property in macro affects the package name.
@@ -68,18 +81,53 @@ def transform_foundry(id):
 
 
 def font_meta_reader(fontfile, font_number=0):
+    """
+    Read metadata in font.
+
+    Parameters
+    ----------
+    fontfile: str
+              Font filename
+    font_number: int
+                 Index number of face in `fontfile`
+
+    Returns
+    -------
+    dict
+         dict containing a metadata
+    """
     meta_data = dict()
     font = TTFont(fontfile, fontNumber=font_number)
     # variable fmd denotes font meta data or fonts meta attributes
     for fmd in font['name'].names:
-        if (fmd.platformID == 3 and fmd.langID == 0x0409) or (fmd.platformID == 1 and fmd.langID == 0):
+        if (fmd.platformID == 3
+                and fmd.langID == 0x0409) or (fmd.platformID == 1
+                                              and fmd.langID == 0):
             meta_data[NAME_TABLE.get(fmd.nameID, False)] = fmd.toStr()
     meta_data['foundry'] = transform_foundry(font['OS/2'].achVendID)
     meta_data['family'] = get_better_family(meta_data)
+    meta_data[
+        'type'] = 'OpenType' if font.sfntVersion == 'OTTO' else 'TrueType'
+    fc = FontClass(fontfile, faceId=font_number)
+    meta_data['alias'] = fc.get_alias_name()
+    meta_data['hashint'] = True if 'prep' in font or 'cvt' in font else False
     return meta_data
 
 
 def get_better_family(meta):
+    """
+    Get better family name from metadata.
+
+    Parameters
+    ----------
+    meta: dict
+          metadata
+
+    Returns
+    -------
+    str
+        Family name in string
+    """
     if 'WWS_Family_Name' in meta:
         family = meta['WWS_Family_Name']
     elif 'Typographic_Family' in meta:
@@ -90,6 +138,20 @@ def get_better_family(meta):
 
 
 def group(families):
+    """
+    Restructure metadata against related family names.
+
+    Parameters
+    ----------
+    families: dict
+              'fontinfo' in metadata
+
+    Returns
+    -------
+    dict
+         restructured fontinfo with key as family name and
+         value as {'fontinfo': ..., 'file': ...}
+    """
     retval = {}
     x = sorted(families.items(), key=lambda x: len(x[1]['family']))
     for k, v in x:
@@ -103,6 +165,103 @@ def group(families):
     return retval
 
 
-if __name__ == "__main__":
-    fontfile = "/home/vvijayra/git_projects/liberation-fonts/liberation-fonts-ttf-2.1.5/LiberationSans-Bold.ttf"
-    print(font_meta_reader(fontfile))
+class FontClass:
+    """Classified font class."""
+
+    TYPE_SANS_SERIF = 0
+    TYPE_SERIF = 1
+    TYPE_MONOSPACE = 2
+    TYPE_CURSIVE = 3
+    TYPE_FANTASY = 4
+    TYPE_EMOJI = 5
+    TYPE_MATH = 6
+    TYPE_END = 7
+
+    def __init__(self, fn, faceId=-1):
+        """
+        Initialize `FontClass`.
+
+        Parameters
+        ----------
+        fn:     str
+                Font filename
+        faceId: int
+                Index number of font face
+        """
+        self.file = fn
+        self.index = faceId
+
+    def __get_type_id(self, n):
+        return 1 << n
+
+    def __guess_class(self):
+        retval = 0
+        tt = TTFont(self.file, fontNumber=self.index)
+        os2 = tt['OS/2']
+        cls_id = (os2.sFamilyClass >> 8) & 0xff
+        subcls_id = os2.sFamilyClass & 0xff
+        match cls_id:
+            case 0 | 6 | 11 | 13 | 14:
+                pass
+            case 1:
+                retval |= self.__get_type_id(FontClass.TYPE_SERIF)
+                if subcls_id == 8:
+                    retval |= self.__get_type_id(FontClass.TYPE_CURSIVE)
+            case 2 | 3:
+                retval |= self.__get_type_id(FontClass.TYPE_SERIF)
+                if subcls_id == 2:
+                    retval |= self.__get_type_id(FontClass.TYPE_CURSIVE)
+            case 4 | 5 | 7:
+                retval |= self.__get_type_id(FontClass.TYPE_SERIF)
+            case 8:
+                retval |= self.__get_type_id(FontClass.TYPE_SANS_SERIF)
+            case 9 | 12:
+                retval |= self.__get_type_id(FontClass.TYPE_FANTASY)
+            case 10:
+                retval |= self.__get_type_id(FontClass.TYPE_CURSIVE)
+            case _:
+                m([':', ': ']).info(self.file).info(self.index).warning(
+                    'Unknown sFamilyClass class ID: {}'.format(cls_id)).out()
+        ft = os2.panose.bFamilyType
+        ss = os2.panose.bSerifStyle
+        pp = os2.panose.bProportion
+        if ft == 3:
+            retval |= self.__get_type_id(FontClass.TYPE_CURSIVE)
+        elif ft >= 4 and ft <= 5:
+            retval |= self.__get_type_id(FontClass.TYPE_FANTASY)
+        elif ft == 2 and ((ss >= 11 and ss <= 13) or ss == 15):
+            retval |= self.__get_type_id(FontClass.TYPE_SANS_SERIF)
+        elif ft == 1:
+            pass
+        elif ft == 0 and ss == 1:
+            pass
+        else:
+            retval |= self.__get_type_id(FontClass.TYPE_SERIF)
+        if (ft == 2 and pp == 9) or (ft == 3 and pp == 3) or (
+                ft == 4 and pp == 9) or (ft == 5 and pp == 3):
+            retval |= self.__get_type_id(FontClass.TYPE_MONOSPACE)
+
+        return retval
+
+    def get_alias_name(self):
+        """
+        Get alias name corresponding to the font.
+
+        Returns
+        -------
+        list
+             List of alias names
+        """
+        alias = [
+            'sans-serif', 'serif', 'monospace', 'cursive', 'fantasy', 'emoji',
+            'math'
+        ]
+        id = self.__guess_class()
+        retval = []
+        if id == 0:
+            return ''
+        for i in range(FontClass.TYPE_END):
+            if (id & self.__get_type_id(i)) == self.__get_type_id(i):
+                retval.append(alias[i])
+
+        return retval
