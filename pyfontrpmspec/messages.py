@@ -16,14 +16,18 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+"""Module to deal with messages."""
 
 import sys
 from termcolor import colored
+from typing import Self
 
 
 class Message:
+    """Colorize message text in a structured way."""
 
-    def __init__(self, joiner=[' ']):
+    def __init__(self, joiner: list[str] = [' ']):
+        """Initialize Message class."""
         self._message = None
         self.__joiner = joiner
         self.__njoiner = 0
@@ -33,37 +37,44 @@ class Message:
             self._message = ''
         elif isinstance(self.__joiner, list):
             self._message += self.__joiner[self.__njoiner]
-            self.__njoiner = min(self.__njoiner + 1, len(self.__joiner)-1)
+            self.__njoiner = min(self.__njoiner + 1, len(self.__joiner) - 1)
 
-    def error(self, msg):
+    def error(self, msg: str) -> Self:
+        """Output `msg` as an error."""
         self.__add_joiner()
         self._message += colored(str(msg), 'red')
         return self
 
-    def warning(self, msg):
+    def warning(self, msg: str) -> Self:
+        """Output `msg` as a warning."""
         self.__add_joiner()
         self._message += colored(str(msg), 'yellow')
         return self
 
-    def info(self, msg):
+    def info(self, msg: str) -> Self:
+        """Output `msg` as an information."""
         self.__add_joiner()
         self._message += colored(str(msg), 'green')
         return self
 
-    def ignored(self):
+    def ignored(self) -> Self:
+        """Mark this as ignored."""
         self.__add_joiner()
         self._message += colored('(ignored)', 'white')
         return self
 
-    def message(self, msg):
+    def message(self, msg: str) -> Self:
+        """Output `msg` as a message."""
         self.__add_joiner()
         self._message += str(msg)
         return self
 
-    def out(self):
+    def out(self) -> None:
+        """Output all the strings held in this object into stderr."""
         print(self._message, flush=True, file=sys.stderr)
 
-    def __str__(self):
+    def __str__(self) -> str:
+        """Convert messages to str."""
         return self._message
 
 

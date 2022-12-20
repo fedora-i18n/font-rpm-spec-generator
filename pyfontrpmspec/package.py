@@ -30,20 +30,8 @@ class Package:
     """Package related class."""
 
     @staticmethod
-    def source_name(src):
-        """
-        Get a Source package name for `src`.
-
-        Parameters
-        ----------
-        src: str
-             Spec filename
-
-        Returns
-        -------
-        str
-            Source package name
-        """
+    def source_name(src: str) -> str:
+        """Get a Source package name for RPM spec file."""
         if src.endswith('.spec'):
             if not shutil.which('rpmspec'):
                 raise AttributeError(m().error('rpmspec is not installed'))
@@ -55,58 +43,23 @@ class Package:
                 m().error('Unsupported filetype:').message(src))
 
     @staticmethod
-    def build_package_name(foundry, family):
-        """
-        Build a package name for foundry and family.
-
-        Parameters
-        ----------
-        foundry: str
-                 Foundry name
-        family:  str
-                 Family name
-
-        Returns
-        -------
-        str
-            Package name in string
-        """
+    def build_package_name(foundry: str, family: str) -> str:
+        """Build a package name for foundry and family."""
         return str(
             FamilyString(foundry + ' ' + re.sub(r'^{}'.format(
                 foundry), '', family)).normalize()) + '-fonts'
 
     @staticmethod
-    def is_targeted_package(pkg, foundry, family):
-        """
-        Check `pkg` is a package name for `foundry` and `family`.
-
-        Returns
-        -------
-        bool
-             True if `pkg` is a package name for `foundry` and `family`.
-             Otherwise False.
-        """
+    def is_targeted_package(pkg: str, foundry: str, family: str) -> bool:
+        """Check `pkg` is a package name for `foundry` and `family`."""
         return pkg == Package.build_package_name(foundry, family)
 
 
 class FamilyString:
-    """
-    Wrapper class to deal with a string of font family name.
+    """Wrapper class to deal with a string of font family name."""
 
-    Parameters
-    ----------
-    string: str
-            A family name.
-    """
-
-    def __init__(self, string):
-        """Initialize a FamilyString.
-
-        Parameters
-        ----------
-        string: str
-                A family name in string
-        """
+    def __init__(self, string: str):
+        """Initialize a FamilyString."""
         self.__string = string
 
     def __normalize(self, name):
@@ -137,17 +90,8 @@ class FamilyString:
         self.__string = re.sub(r'^-', '', s)
         return self
 
-    def normalize(self):
-        """
-        Normalize a family name in string.
-
-        this is required process to make it for package name.
-
-        Returns
-        -------
-        str
-            a normalized string
-        """
+    def normalize(self) -> str:
+        """Normalize a family name in string."""
         return self.__normalize_mutable().__dropsuffix(
             ['normal', 'book', 'regular', 'upright']).__dropsuffix([
                 'italic', 'ita', 'ital', 'cursive', 'kursiv', 'oblique',
@@ -170,13 +114,6 @@ class FamilyString:
                 'black', 'heavy', 'nord', 'demi', 'ultra'
             ]).__dropduplicate()
 
-    def __str__(self):
-        """
-        Represent a string held in FamilyString class.
-
-        Returns
-        -------
-        str
-            a string
-        """
+    def __str__(self) -> str:
+        """Represent a string held in FamilyString class."""
         return self.__string

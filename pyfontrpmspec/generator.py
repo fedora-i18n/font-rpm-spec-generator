@@ -36,19 +36,8 @@ from pyfontrpmspec import template
 from pyfontrpmspec.package import Package, FamilyString
 
 
-def generate(args):
-    """Generate a spec file.
-
-    Parameters
-    ----------
-    args: dict
-          All the parameters required to generate a spec file
-
-    Returns
-    -------
-    str
-        RPM spec file in string
-    """
+def generate(args) -> str:
+    """Generate a spec file."""
     ma = re.match(r'^{}-([0-9.a-zA-Z]+)\..*'.format(args.NAME), args.source[0])
     version = args.VERSION if args.VERSION else ma.group(1) if ma else None
     if version is None:
@@ -159,19 +148,11 @@ def generate(args):
 class FontconfigEntry:
     """Class to hold font information."""
 
-    def __init__(self, family, lang=None, hashint=False):
-        """
-        Initialize a FontconfigEntry class.
-
-        Parameters
-        ----------
-        family: str
-                A family name.
-        lang:   str or list
-                Targeted languages for family
-        hashint: bool
-                 Wheter or not family has hinting.
-        """
+    def __init__(self,
+                 family: str,
+                 lang: str | list[str] = None,
+                 hashint: bool = False):
+        """Initialize a FontconfigEntry class."""
         self.family = family
         self.lang = lang
         self.hashint = hashint
@@ -180,34 +161,18 @@ class FontconfigEntry:
 class FontconfigGenerator:
     """Class to generate a fontconfig config file."""
 
-    def __init__(self, path):
-        """
-        Initialize a FontconfigGenerator class.
-
-        Parameters
-        ----------
-        path: str
-              Path name where is supposed to store a fontconfig config file at.
-        """
+    def __init__(self, path: str):
+        """Initialize a FontconfigGenerator class."""
         self._families = {}
         self._path = path
         self._confname = ''
 
-    def add(self, alias, family, lang=None, hashint=False):
-        """
-        Add the information of fonts into the object.
-
-        Parameters
-        ----------
-        alias:  str
-                an alias name such as sans-serif, serif, monospace
-        family: str
-                a family name
-        lang:   str or list
-                languages targeted for this font
-        hashint: bool
-                 Wheter or not this font has hinting
-        """
+    def add(self,
+            alias: str,
+            family: str,
+            lang: str | list[str] = None,
+            hashint: bool = False) -> None:
+        """Add the information of fonts into the object."""
         if alias not in self._families:
             self._families[alias] = []
         if not isinstance(lang, list):
@@ -218,31 +183,15 @@ class FontconfigGenerator:
                 return
         self._families[alias].append(FontconfigEntry(family, lang, hashint))
 
-    def set_fn(self, priority, fn):
-        """
-        Set a filename.
-
-        Parameters
-        ----------
-        priority: int
-                  a number of the priority for fontconfig config file
-        fn:       str
-                  filename
-        """
+    def set_fn(self, priority: int, fn: str) -> None:
+        """Set a filename."""
         self._confname = "{:02}-{}.conf".format(priority, fn)
 
-    def get_fn(self):
-        """
-        Get a real filename which contains a fontconfig config.
-
-        Returns
-        -------
-        str
-            a filename
-        """
+    def get_fn(self) -> str:
+        """Get a real filename which contains a fontconfig config."""
         return self._confname
 
-    def write(self):
+    def write(self) -> None:
         """Write a content of fontconfig config into a file."""
         if self._confname is None:
             raise TypeError(

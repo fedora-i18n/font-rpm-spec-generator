@@ -16,12 +16,15 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+"""Module to template a spec file."""
 
 from jinja2 import Environment, FileSystemLoader
 from importlib.resources import files
+from typing import Any
 
 
-def get(npkgs, data):
+def get(npkgs: int, data: dict[str, Any]) -> str:
+    """Generate a spec file from template."""
     try:
         ptempl = files('pyfontrpmspec.template').name()
     except TypeError:
@@ -30,8 +33,10 @@ def get(npkgs, data):
     template = {}
 
     if npkgs == 1:
-        template['spec'] = env.get_template('spectemplate-fonts-simple.spec').render(data)
+        template['spec'] = env.get_template(
+            'spectemplate-fonts-simple.spec').render(data)
     else:
-        template['spec'] = env.get_template('spectemplate-fonts-multi.spec').render(data)
+        template['spec'] = env.get_template(
+            'spectemplate-fonts-multi.spec').render(data)
 
     return template

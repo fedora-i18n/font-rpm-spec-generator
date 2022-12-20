@@ -31,21 +31,8 @@ from pyfontrpmspec import template
 from pyfontrpmspec.package import Package
 
 
-def old2new(specfile, args):
-    """
-    Convert `specfile` to new one against Fedora fonts Packaging Guidelines.
-
-    Parameters
-    ----------
-    specfile: str
-              Filename to the targeted RPM spec file
-    args:     dict
-              All the parameters required to convert RPM spec file.
-
-    Returns
-    -------
-    New RPM spec file in string
-    """
+def old2new(specfile: str, args: object) -> str:
+    """Convert `specfile` to new one against Packaging Guidelines."""
     if not shutil.which('rpmspec'):
         raise AttributeError(m().error('rpmspec is not installed'))
     origspec = Spec.from_file(specfile)

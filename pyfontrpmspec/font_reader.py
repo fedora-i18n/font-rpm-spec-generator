@@ -23,6 +23,7 @@ import re
 import _debugpath  # noqa: F401
 from fontTools.ttLib import TTFont
 from pyfontrpmspec.messages import Message as m
+from typing import Any
 
 NAME_TABLE = {
     0: 'CopyrightNotice',
@@ -54,20 +55,8 @@ NAME_TABLE = {
 }
 
 
-def transform_foundry(id):
-    """
-    Transform 4-character foundry string to the human-readable string.
-
-    Parameters
-    ----------
-    id: str
-        4-character foundry name
-
-    Returns
-    -------
-    str
-        Foundry name
-    """
+def transform_foundry(id: str) -> str:
+    """Transform 4-character foundry string to the human-readable string."""
     """
     4 letter characters from OS/2 table isn't hard to recognize what it is.
     particularly foundry property in macro affects the package name.
@@ -80,22 +69,8 @@ def transform_foundry(id):
     return FOUNDARIES[id] if id in FOUNDARIES else id
 
 
-def font_meta_reader(fontfile, font_number=0):
-    """
-    Read metadata in font.
-
-    Parameters
-    ----------
-    fontfile: str
-              Font filename
-    font_number: int
-                 Index number of face in `fontfile`
-
-    Returns
-    -------
-    dict
-         dict containing a metadata
-    """
+def font_meta_reader(fontfile: str, font_number: int = 0) -> dict[str, Any]:
+    """Read metadata from `fontfile`."""
     meta_data = dict()
     font = TTFont(fontfile, fontNumber=font_number)
     # variable fmd denotes font meta data or fonts meta attributes
@@ -114,20 +89,8 @@ def font_meta_reader(fontfile, font_number=0):
     return meta_data
 
 
-def get_better_family(meta):
-    """
-    Get better family name from metadata.
-
-    Parameters
-    ----------
-    meta: dict
-          metadata
-
-    Returns
-    -------
-    str
-        Family name in string
-    """
+def get_better_family(meta: dict[str, Any]) -> str:
+    """Get better family name from metadata."""
     if 'WWS_Family_Name' in meta:
         family = meta['WWS_Family_Name']
     elif 'Typographic_Family' in meta:
@@ -137,21 +100,8 @@ def get_better_family(meta):
     return family
 
 
-def group(families):
-    """
-    Restructure metadata against related family names.
-
-    Parameters
-    ----------
-    families: dict
-              'fontinfo' in metadata
-
-    Returns
-    -------
-    dict
-         restructured fontinfo with key as family name and
-         value as {'fontinfo': ..., 'file': ...}
-    """
+def group(families: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    """Restructure metadata against related family names."""
     retval = {}
     x = sorted(families.items(), key=lambda x: len(x[1]['family']))
     for k, v in x:
@@ -177,17 +127,8 @@ class FontClass:
     TYPE_MATH = 6
     TYPE_END = 7
 
-    def __init__(self, fn, faceId=-1):
-        """
-        Initialize `FontClass`.
-
-        Parameters
-        ----------
-        fn:     str
-                Font filename
-        faceId: int
-                Index number of font face
-        """
+    def __init__(self, fn: str, faceId: int = -1):
+        """Initialize `FontClass`."""
         self.file = fn
         self.index = faceId
 
@@ -243,15 +184,8 @@ class FontClass:
 
         return retval
 
-    def get_alias_name(self):
-        """
-        Get alias name corresponding to the font.
-
-        Returns
-        -------
-        list
-             List of alias names
-        """
+    def get_alias_name(self) -> list[str]:
+        """Get alias name corresponding to the font."""
         alias = [
             'sans-serif', 'serif', 'monospace', 'cursive', 'fantasy', 'emoji',
             'math'
