@@ -1,8 +1,8 @@
 {
-    "summary": "dummy summary",
-    "description": "dummy Desc",
-    "url": "https://github.com/liberationfonts/liberation-fonts",
-    "lang":"en",
-    "dir":"/home/vvijayra/git_projects/liberation-fonts",
-    "source":"https://github.com/liberationfonts/liberation-fonts/files/7261483/liberation-fonts-2.1.5.tar.gz"
+  "license": "OFL-1.1",
+  "url": "https://github.com/notofonts/{subname}",
+  "source": "{url}/releases/download/{name}-v{VERSION}.zip",
+  "summary": "dummy summary",
+  "description": "dummy Desc",
+  "lang": "en",
 }
