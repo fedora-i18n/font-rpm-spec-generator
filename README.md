@@ -1,4 +1,8 @@
 # Font RPM Spec Generator
+[![pip version badge](https://img.shields.io/pypi/v/fontrpmspec)](https://pypi.org/project/fontrpmspec/)
+[![tag badge](https://img.shields.io/github/v/tag/fedora-i18n/font-rpm-spec-generator)](https://github.com/fedora-i18n/font-rpm-spec-generator/tags)
+[![license badge](https://img.shields.io/github/license/fedora-i18n/font-rpm-spec-generator)](./LICENSE)
+
 This tool generates RPM [specfile](https://docs.fedoraproject.org/en-US/packaging-guidelines/FontsPolicy/) for a given font.
 
 ## setup & use
