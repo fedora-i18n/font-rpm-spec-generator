@@ -3,27 +3,53 @@ This tool generates RPM [specfile](https://docs.fedoraproject.org/en-US/packagin
 
 ## setup & use
 ```
+$ pip3 install build
 $ python3 -m build
 $ pip3 install --user dist/fontrpmspec*.whl
 ```
 
 ## usage
-```
-usage: main.py  [options]
 
-Font packaging tool
+### fontrpmspec-gen
+```
+usage: fontrpmspec-gen [-h] [-f JSON_FILE] [-l LICENSE] [-o OUTPUT] [--outputdir OUTPUTDIR] [--sourcedir SOURCEDIR]
+                       [-s SOURCE] [-u URL] [-c CHANGELOG] [--email EMAIL] [--username USERNAME] [--summary SUMMARY]
+                       [--description DESCRIPTION] [-a ALIAS] [--lang [LANG ...]] [--priority PRIORITY]
+                       NAME [VERSION]
+
+Fonts RPM spec file generator against guidelines
+
+positional arguments:
+  NAME                  Package name
+  VERSION               Package version (default: None)
 
 options:
-  -h, --help                      	  Show this help message and exit
-  -D DIR, --dir DIR          	  Font dir path
-  -l LANG, --lang LANG		Specify lang which fontfile comply
-  -d DESCRIPTION, --description DESCRIPTION
-                        					Description of your fontfile
-  -s SUMMARY, --summary SUMMARY
-                        					short summary of your fontfile
-  -u URL, --url URL     	 	Font Project URL
-  -S SOURCE, --source SOURCE
-                        					Font source tar or path
+  -h, --help            show this help message and exit
+  -f JSON_FILE, --json-file JSON_FILE
+                        Config file written in JSON (default: None)
+  -l LICENSE, --license LICENSE
+                        License name of this project (default: OFL-1.1)
+  -o OUTPUT, --output OUTPUT
+                        Output file (default: -)
+  --outputdir OUTPUTDIR
+                        Output directory (default: .)
+  --sourcedir SOURCEDIR
+                        Source directory (default: .)
+  -s SOURCE, --source SOURCE
+                        Source file (default: None)
+  -u URL, --url URL     Project URL (default: None)
+  -c CHANGELOG, --changelog CHANGELOG
+                        Changelog entry (default: Initial import)
+  --email EMAIL         email address to put into changelog (default: yourname@example.com)
+  --username USERNAME   Real user name to put into changelog (default: Your Name)
+  --summary SUMMARY     Summary text for package (default: {family}, {alias} typeface {type} font)
+  --description DESCRIPTION
+                        Package description (default: This package contains {family} which is a {alias} typeface of
+                        {type} font.)
+  -a ALIAS, --alias ALIAS
+                        Set an alias name for family, such as sans-serif, serif, monospace (default: auto)
+  --lang [LANG ...]     Targetted language for a font (default: None)
+  --priority PRIORITY   Number of Fontconfig config priority (default: 69)
 ```
 
 ### fontrpmspec-conv
@@ -44,7 +70,6 @@ options:
 ```
 
 Note:
-- Tool will generate all required (.spec, .config, .metainfo.xml) files in draft dir of the project.
 - You may need to update `BuildRequires` section as per your font requiremnts in your spec.
 - Also update the `%build` section if your font uses some other build process.
 
