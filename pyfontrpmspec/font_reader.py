@@ -20,10 +20,13 @@
 """Module to deal with font metadata."""
 
 import re
-import _debugpath  # noqa: F401
-from fontTools.ttLib import TTFont
-from pyfontrpmspec.messages import Message as m
 from typing import Any
+from fontTools.ttLib import TTFont
+try:
+    import _debugpath  # noqa: F401
+except ModuleNotFoundError:
+    pass
+from pyfontrpmspec.messages import Message as m
 
 NAME_TABLE = {
     0: 'CopyrightNotice',

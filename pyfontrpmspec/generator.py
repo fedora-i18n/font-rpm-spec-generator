@@ -28,7 +28,10 @@ import sys
 from datetime import date
 from babel.dates import format_date
 from pathlib import Path
-import _debugpath  # noqa: F401
+try:
+    import _debugpath  # noqa: F401
+except ModuleNotFoundError:
+    pass
 from pyfontrpmspec import font_reader as fr
 from pyfontrpmspec.messages import Message as m
 from pyfontrpmspec import sources as src

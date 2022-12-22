@@ -24,7 +24,10 @@ import shutil
 import tempfile
 from lxml import etree
 from pathlib import Path
-import _debugpath  # noqa: F401
+try:
+    import _debugpath  # noqa: F401
+except ModuleNotFoundError:
+    pass
 from pyfontrpmspec import font_reader as fr
 from pyfontrpmspec.messages import Message as m
 from urllib.parse import urlparse

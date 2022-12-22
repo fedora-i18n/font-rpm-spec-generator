@@ -22,8 +22,11 @@ import argparse
 import shutil
 import subprocess
 import sys
-import _debugpath  # noqa: F401
 from pyrpm.spec import Spec
+try:
+    import _debugpath  # noqa: F401
+except ModuleNotFoundError:
+    pass
 from pyfontrpmspec import font_reader as fr
 from pyfontrpmspec.messages import Message as m
 from pyfontrpmspec import sources as src
