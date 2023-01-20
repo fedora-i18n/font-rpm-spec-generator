@@ -62,13 +62,12 @@ class File:
         u = urlparse(self.realname, allow_fragments=True)
         if not u.scheme:
             return self.__name(self.realname)
+        elif u.fragment:
+            return Path(u.fragment).name
+        elif u.query:
+            return Path(u.query).name
         else:
-            if u.fragment:
-                return Path(u.fragment).name
-            elif u.query:
-                return Path(u.query).name
-            else:
-                return Path(u.path).name
+            return Path(u.path).name
 
     @property
     def realname(self) -> str:
@@ -327,8 +326,8 @@ class Sources:
         yield from self._sources
 
 
-def extract(name: str, version: str, sources: list[str],
-            sourcedir: str) -> dict[str, Any]:
+def extract(name: str, version: str, sources: list[str], sourcedir: str,
+            **kwargs: Any) -> dict[str, Any]:
     """Extract source files and gather information."""
     exdata = {
         'sources': [],
@@ -343,6 +342,7 @@ def extract(name: str, version: str, sources: list[str],
     }
     sources = Sources(arrays=sources, sourcedir=sourcedir)
     nsource = 20
+    exists = {}
     for source in sources:
         for sf in source:
             if sf.is_license():
@@ -358,7 +358,24 @@ def extract(name: str, version: str, sources: list[str],
                     exdata['fontmap'].update(sf.family_map())
                 source.ignore = not source.is_archive()
             elif sf.is_font():
+                if 'excludepath' in kwargs:
+                    found = False
+                    for ss in kwargs['excludepath']:
+                        if sf.name.startswith(ss):
+                            found = True
+                            break
+                    if found:
+                        continue
                 exdata['fonts'].append(sf)
+                nm = Path(sf.name).name
+                if nm in exists:
+                    m([': ']).info(sf.name).warning(
+                        ('Possibly duplicate font files detected. '
+                         'Consider to use `excludepath` option.')).out()
+                    m().message(exists[nm]).out()
+                else:
+                    exists[nm] = []
+                exists[nm].append(sf.name)
                 if sf.name not in exdata['fontinfo']:
                     exdata['fontinfo'][sf.name] = fr.font_meta_reader(
                         sf.fullname)

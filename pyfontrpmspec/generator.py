@@ -46,7 +46,11 @@ def generate(args) -> str:
     version = args.VERSION if args.VERSION else ma.group(1) if ma else None
     if version is None:
         raise TypeError(m().error('Unable to guess version number'))
-    exdata = src.extract(args.NAME, version, args.source, args.sourcedir)
+    exdata = src.extract(args.NAME,
+                         version,
+                         args.source,
+                         args.sourcedir,
+                         excludepath=args.excludepath)
 
     if 'licenses' not in exdata:
         raise TypeError(m().error('No license files detected'))
@@ -134,9 +138,9 @@ def generate(args) -> str:
         'setup':
         exdata['setup'],
         'changelog':
-        '* %s %s <%s> - %s-1\n- %s' %
-        (format_date(date.today(), "EEE MMM dd yyyy", locale='en'),
-         args.username, args.email, args.VERSION, args.changelog),
+        '* {} {} <{}> - {}-1\n- {}'.format(
+            format_date(date.today(), "EEE MMM dd yyyy", locale='en'),
+            args.username, args.email, version, args.changelog),
     }
     if len(families) == 1:
         data['family'] = families[0]['family']
@@ -324,6 +328,10 @@ def main():
                         type=int,
                         default=69,
                         help='Number of Fontconfig config priority')
+    parser.add_argument('-e',
+                        '--excludepath',
+                        action='append',
+                        help='Exclude path from source archives')
     parser.add_argument('NAME', help='Package name')
     parser.add_argument('VERSION', nargs='?', help='Package version')
 
