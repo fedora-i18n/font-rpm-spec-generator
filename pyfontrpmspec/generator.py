@@ -41,7 +41,8 @@ from pyfontrpmspec.package import Package, FamilyString
 
 def generate(args) -> str:
     """Generate a spec file."""
-    ma = re.match(r'^{}-([0-9.a-zA-Z]+)\..*'.format(args.NAME), args.source[0])
+    ma = re.match(r'^{}-v?([0-9.a-zA-Z]+)\..*'.format(args.NAME),
+                  args.source[0])
     version = args.VERSION if args.VERSION else ma.group(1) if ma else None
     if version is None:
         raise TypeError(m().error('Unable to guess version number'))
