@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "fontrpmspec"
-version = "0.2"
+version = "0.3"
 authors = [
   { name = "Fedora I18N team", email="i18n@lists.fedoraproject.org" }
 ]
