@@ -72,7 +72,8 @@ def params(func):
             {'summary': '{family}, {alias} typeface {type} font'})
         'username' not in kwargs and kwargs.update(
             {'username': pwd.getpwnam(getpass.getuser()).pw_gecos})
-        return func(*args, **kwargs)
+        'version' not in kwargs and kwargs.update({'version': None})
+        return func(**kwargs)
 
     return wrapper
 
@@ -113,7 +114,7 @@ def generate(name, sources, url, **kwargs: Any) -> dict[str, Any]:
 
     ma = re.match(
         r'^{}-v?(((?!tar|zip)[0-9.a-zA-Z])+)\..*'.format(kwargs['name']),
-        kwargs['sources'][0])
+        Path(src.Source(kwargs['sources'][0]).name).name)
     version = kwargs['version'] if kwargs['version'] is not None else ma.group(
         1) if ma else None
     if version is None:
