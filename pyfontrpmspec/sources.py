@@ -340,7 +340,8 @@ def extract(name: str, version: str, sources: list[str], sourcedir: str,
         'fontinfo': {},
         'archive': False
     }
-    'excludepath' not in kwargs and kwargs.update({'excludepath': []})
+    'excludepath' not in kwargs or kwargs[
+        'excludepath'] is None and kwargs.update({'excludepath': []})
     sources = Sources(arrays=sources, sourcedir=sourcedir)
     nsource = 20
     exists = {}

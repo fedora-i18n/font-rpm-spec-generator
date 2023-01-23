@@ -55,7 +55,7 @@ def params(func):
         })
         'email' not in kwargs and kwargs.update(
             {'email': os.environ.get('EMAIL')})
-        'excludepath' not in kwargs and kwargs.update({'excludepath': None})
+        'excludepath' not in kwargs and kwargs.update({'excludepath': []})
         'lang' not in kwargs and kwargs.update({'lang': None})
         'license' not in kwargs and kwargs.update({'license': 'OFL-1.1'})
         'output' not in kwargs and kwargs.update({'output': '-'})
