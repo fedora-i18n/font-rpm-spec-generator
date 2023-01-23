@@ -29,6 +29,7 @@ from datetime import date
 from babel.dates import format_date
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
 try:
     import _debugpath  # noqa: F401
 except ModuleNotFoundError:
@@ -182,6 +183,9 @@ def generate(name, sources, url, **kwargs: Any) -> dict[str, Any]:
         retval['fontconfig'].append(c)
         fontconfig.append(c.get_fn())
 
+    source = kwargs['sources'][0] if urlparse(
+        kwargs['sources'][0], allow_fragments=True).scheme else Path(
+            kwargs['sources'][0]).name
     data = {
         'version':
         version,
@@ -190,7 +194,7 @@ def generate(name, sources, url, **kwargs: Any) -> dict[str, Any]:
         'url':
         kwargs['url'],
         'source':
-        Path(kwargs['sources'][0]).name,
+        source,
         'copy_source':
         not exdata['archive'],
         'exsources':
