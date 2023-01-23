@@ -340,6 +340,7 @@ def extract(name: str, version: str, sources: list[str], sourcedir: str,
         'fontinfo': {},
         'archive': False
     }
+    'excludepath' not in kwargs and kwargs.update({'excludepath': []})
     sources = Sources(arrays=sources, sourcedir=sourcedir)
     nsource = 20
     exists = {}
@@ -350,22 +351,20 @@ def extract(name: str, version: str, sources: list[str], sourcedir: str,
             elif sf.is_doc():
                 exdata['docs'].append(sf)
             elif sf.is_fontconfig():
-                if sf.family in exdata['fontconfig']:
-                    m([': ', ' ']).info(
-                        sf.family).warning('Duplicate family name').out()
+                sf.family in exdata['fontconfig'] and m([': ', ' ']).info(
+                    sf.family).warning('Duplicate family name').out()
                 exdata['fontconfig'][sf.family] = sf
-                if sf.has_family_map():
-                    exdata['fontmap'].update(sf.family_map())
+                sf.has_family_map() and exdata['fontmap'].update(
+                    sf.family_map())
                 source.ignore = not source.is_archive()
             elif sf.is_font():
-                if 'excludepath' in kwargs:
-                    found = False
-                    for ss in kwargs['excludepath']:
-                        if sf.name.startswith(ss):
-                            found = True
-                            break
-                    if found:
-                        continue
+                found = False
+                for ss in kwargs['excludepath']:
+                    if sf.name.startswith(ss):
+                        found = True
+                        break
+                if found:
+                    continue
                 exdata['fonts'].append(sf)
                 nm = Path(sf.name).name
                 if nm in exists:

@@ -28,6 +28,7 @@ import sys
 from datetime import date
 from babel.dates import format_date
 from pathlib import Path
+from typing import Any
 try:
     import _debugpath  # noqa: F401
 except ModuleNotFoundError:
@@ -39,18 +40,89 @@ from pyfontrpmspec import template
 from pyfontrpmspec.package import Package, FamilyString
 
 
-def generate(args) -> str:
-    """Generate a spec file."""
-    ma = re.match(r'^{}-v?([0-9.a-zA-Z]+)\..*'.format(args.NAME),
-                  args.source[0])
-    version = args.VERSION if args.VERSION else ma.group(1) if ma else None
+def params(func):
+    """Decorate function to initialize default parameters."""
+
+    def wrapper(*args, **kwargs):
+        kwargs.update(zip(func.__code__.co_varnames, args))
+        # Add default values for optional parameters.
+        'alias' not in kwargs and kwargs.update({'alias': 'auto'})
+        'changelog' not in kwargs and kwargs.update(
+            {'changelog': 'Initial import'})
+        'description' not in kwargs and kwargs.update({
+            'description': ('This package contains {family} which is a {alias}'
+                            ' typeface of {type} font.')
+        })
+        'email' not in kwargs and kwargs.update(
+            {'email': os.environ.get('EMAIL')})
+        'excludepath' not in kwargs and kwargs.update({'excludepath': None})
+        'lang' not in kwargs and kwargs.update({'lang': None})
+        'license' not in kwargs and kwargs.update({'license': 'OFL-1.1'})
+        'output' not in kwargs and kwargs.update({'output': '-'})
+        if not (hasattr(kwargs['output'], 'write')
+                and hasattr(kwargs['output'], 'close')):
+            kwargs['output'] = sys.stdout if kwargs['output'] == '-' else open(
+                kwargs['output'], 'w')
+        if 'sources' in kwargs and not isinstance(kwargs['sources'], list):
+            kwargs['sources'] = list(kwargs['sources'])
+        'outputdir' not in kwargs and kwargs.update({'outputdir': '.'})
+        'priority' not in kwargs and kwargs.update({'priority': 69})
+        'sourcedir' not in kwargs and kwargs.update({'sourcedir': '.'})
+        'summary' not in kwargs and kwargs.update(
+            {'summary': '{family}, {alias} typeface {type} font'})
+        'username' not in kwargs and kwargs.update(
+            {'username': pwd.getpwnam(getpass.getuser()).pw_gecos})
+        return func(*args, **kwargs)
+
+    return wrapper
+
+
+@params
+def generate(name, sources, url, **kwargs: Any) -> dict[str, Any]:
+    """Generate a spec file.
+
+    Currently following keyword arguments are supported:
+
+    'name': str - Archive name.
+    'sources': str|list[str] - the source files.
+    'url': str - URL to the project.
+    'alias': str (optional) - Alias name for targeted family.
+    'changelog': str (optional) - changelog entry.
+    'description': str (optional) - Package description.
+    'email': str (optional) - A mail address for maintainer.
+    'excludepath': list[str] (optional) - A list of exclusive paths
+                                          for sources.
+    'lang': list[str] (optional) - A list of targeted language for a font
+    'license': str (optional) - License name.
+    'priority': int (optional) - Number of Fontconfig config priority.
+    'sourcedir': str (optional) - Source directory. current directory
+                                  will be used if not.
+    'summary': str (optional) - Summary of package.
+    'username': str (optional) - A name of package maintainer.
+    'version': str (optional) - Archive version. if not specified,
+                                it will be guessed from the source.
+
+    This function returns dict with following key and values:
+    'spec': str - RPM spec
+    'fontconfig': FontconfigGenerator - fontconfig file to be output
+    """
+    kwargs['name'] = name
+    kwargs['sources'] = sources
+    kwargs['url'] = url
+    retval = {'spec': None, 'fontconfig': []}
+
+    ma = re.match(
+        r'^{}-v?(((?!tar|zip)[0-9.a-zA-Z])+)\..*'.format(kwargs['name']),
+        kwargs['sources'][0])
+    version = kwargs['version'] if kwargs['version'] is not None else ma.group(
+        1) if ma else None
     if version is None:
         raise TypeError(m().error('Unable to guess version number'))
-    exdata = src.extract(args.NAME,
+    exdata = src.extract(kwargs['name'],
                          version,
-                         args.source,
-                         args.sourcedir,
-                         excludepath=args.excludepath)
+                         kwargs['sources'],
+                         kwargs['sourcedir'],
+                         excludepath=kwargs['excludepath'])
 
     if 'licenses' not in exdata:
         raise TypeError(m().error('No license files detected'))
@@ -74,14 +146,15 @@ def generate(args) -> str:
             m([': '
                ]).info(k).warning('Multiple generic alias was detected').info(
                    v[0]['fontinfo']['alias']).out()
-        args.alias = v[0]['fontinfo']['alias'][0]
+        if kwargs['alias'] == 'auto':
+            kwargs['alias'] = v[0]['fontinfo']['alias'][0]
         info = {
             'family':
             k,
             'summary':
-            args.summary.format(family=k,
-                                alias=args.alias,
-                                type=v[0]['fontinfo']['type']),
+            kwargs['summary'].format(family=k,
+                                     alias=kwargs['alias'],
+                                     type=v[0]['fontinfo']['type']),
             'fonts':
             ' '.join([vv['file'] for vv in v]),
             'exfonts':
@@ -91,21 +164,21 @@ def generate(args) -> str:
             'exconf':
             '%{nil}',
             'description':
-            args.description.format(family=k,
-                                    alias=args.alias,
-                                    type=v[0]['fontinfo']['type']),
+            kwargs['description'].format(family=k,
+                                         alias=kwargs['alias'],
+                                         type=v[0]['fontinfo']['type']),
         }
         families.append(info)
-        c = FontconfigGenerator(args.outputdir)
+        c = FontconfigGenerator()
         for a in [vvv for vv in v for vvv in vv['fontinfo']['alias']]:
-            c.add(a, k, args.lang, v[0]['fontinfo']['hashint'])
+            c.add(a, k, kwargs['lang'], v[0]['fontinfo']['hashint'])
         c.set_fn(
-            args.priority,
+            kwargs['priority'],
             str(
                 FamilyString(exdata['foundry'] + ' ' + re.sub(
                     r'^{}'.format(exdata['foundry']), '', k)).normalize()) +
             '-fonts')
-        c.write()
+        retval['fontconfig'].append(c)
         fontconfig.append(c.get_fn())
 
     data = {
@@ -114,9 +187,9 @@ def generate(args) -> str:
         'release':
         1,
         'url':
-        args.url,
+        kwargs['url'],
         'source':
-        Path(args.source[0]).name,
+        Path(kwargs['sources'][0]).name,
         'copy_source':
         not exdata['archive'],
         'exsources':
@@ -124,7 +197,7 @@ def generate(args) -> str:
         'nsources':
         exdata['nsources'],
         'license':
-        args.license,
+        kwargs['license'],
         'license_file':
         ' '.join([s.name for s in exdata['licenses']]),
         'docs':
@@ -140,7 +213,7 @@ def generate(args) -> str:
         'changelog':
         '* {} {} <{}> - {}-1\n- {}'.format(
             format_date(date.today(), "EEE MMM dd yyyy", locale='en'),
-            args.username, args.email, version, args.changelog),
+            kwargs['username'], kwargs['email'], version, kwargs['changelog']),
     }
     if len(families) == 1:
         data['family'] = families[0]['family']
@@ -150,7 +223,8 @@ def generate(args) -> str:
             data['fontconfig']) == 0 else data['fontconfig'][0]
         data['fonts'] = families[0]['fonts']
 
-    return template.get(len(families), data)
+    retval.update(template.get(len(families), data))
+    return retval
 
 
 class FontconfigEntry:
@@ -169,10 +243,10 @@ class FontconfigEntry:
 class FontconfigGenerator:
     """Class to generate a fontconfig config file."""
 
-    def __init__(self, path: str):
+    def __init__(self):
         """Initialize a FontconfigGenerator class."""
         self._families = {}
-        self._path = path
+        self.path = None
         self._confname = ''
 
     def add(self,
@@ -247,10 +321,12 @@ class FontconfigGenerator:
                 s = default.format(alias=k, family=vv.family)
                 rules.append(s)
 
-        with open(Path(self._path) / self._confname, 'w') as f:
+        if self.path is None:
+            raise ValueError('Set a path first.')
+        with open(Path(self.path) / self._confname, 'w') as f:
             m([': ', ' ']).info(
                 self._confname).message('fontconfig file was stored at').info(
-                    self._path).out()
+                    self.path).out()
             f.write(template.format(rules=''.join(rules)))
 
 
@@ -342,10 +418,18 @@ def main():
         parser.print_usage()
         sys.exit(1)
 
-    templates = generate(args)
+    templates = generate(name=args.NAME,
+                         version=args.VERSION,
+                         url=args.url,
+                         sources=args.source,
+                         sourcedir=args.sourcedir,
+                         excludepath=args.excludepath)
     if templates is None:
         sys.exit(1)
 
+    for f in templates['fontconfig']:
+        f.path = args.outputdir
+        f.write()
     args.output.write(templates['spec'])
     args.output.close()
     print('\n', flush=True, file=sys.stderr)
