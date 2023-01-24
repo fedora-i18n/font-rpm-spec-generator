@@ -35,6 +35,7 @@ try:
     import _debugpath  # noqa: F401
 except ModuleNotFoundError:
     pass
+import pyfontrpmspec.errors as err
 from pyfontrpmspec import font_reader as fr
 from pyfontrpmspec.messages import Message as m
 from pyfontrpmspec import sources as src
@@ -58,6 +59,7 @@ def params(func):
         'email' not in kwargs and kwargs.update(
             {'email': os.environ.get('EMAIL')})
         'excludepath' not in kwargs and kwargs.update({'excludepath': []})
+        'ignore_error' not in kwargs and kwargs.update({'ignore_error': []})
         'lang' not in kwargs and kwargs.update({'lang': None})
         'license' not in kwargs and kwargs.update({'license': 'OFL-1.1'})
         'output' not in kwargs and kwargs.update({'output': '-'})
@@ -69,6 +71,7 @@ def params(func):
             kwargs['sources'] = list(kwargs['sources'])
         'outputdir' not in kwargs and kwargs.update({'outputdir': '.'})
         'priority' not in kwargs and kwargs.update({'priority': 69})
+        'vf_priority' not in kwargs and kwargs.update({'vf_priority': 68})
         'sourcedir' not in kwargs and kwargs.update({'sourcedir': '.'})
         'summary' not in kwargs and kwargs.update(
             {'summary': '{family}, {alias} typeface {type} font'})
@@ -96,9 +99,12 @@ def generate(name: str, sources: str | list[str], url: str,
     'email': str (optional) - A mail address for maintainer.
     'excludepath': list[str] (optional) - A list of exclusive paths
                                           for sources.
+    'ignore_error': list[str] (optional) - A list of exception name to ignore.
     'lang': list[str] (optional) - A list of targeted language for a font
     'license': str (optional) - License name.
     'priority': int (optional) - Number of Fontconfig config priority.
+    'vf_priority': int (optional) - Number of Fontconfig config priority
+                                    for variable font.
     'sourcedir': str (optional) - Source directory. current directory
                                   will be used if not.
     'summary': str (optional) - Summary of package.
@@ -125,8 +131,9 @@ def generate(name: str, sources: str | list[str], url: str,
     kwargs['version'] = version
     exdata = src.extract(**kwargs)
 
-    if 'licenses' not in exdata:
-        raise TypeError(m().error('No license files detected'))
+    if len(exdata['licenses']) == 0:
+        m().error('No license files detected').throw(err.MissingFileError,
+                                                     kwargs['ignore_error'])
     if 'fonts' not in exdata:
         raise TypeError(m().error('No fonts files detected'))
 
@@ -175,7 +182,8 @@ def generate(name: str, sources: str | list[str], url: str,
         for a in [vvv for vv in v for vvv in vv['fontinfo']['alias']]:
             c.add(a, k, kwargs['lang'], v[0]['fontinfo']['hashint'])
         c.set_fn(
-            kwargs['priority'],
+            kwargs['priority']
+            if not v[0]['fontinfo']['variable'] else kwargs['vf_priority'],
             str(
                 FamilyString(exdata['foundry'] + ' ' + re.sub(
                     r'^{}'.format(exdata['foundry']), '', k)).normalize()) +
@@ -378,7 +386,6 @@ def main():
     parser.add_argument('--outputdir', default='.', help='Output directory')
     parser.add_argument('--sourcedir', default='.', help='Source directory')
     parser.add_argument('-s', '--source', action='append', help='Source file')
-    parser.add_argument('-u', '--url', help='Project URL')
     parser.add_argument('-c',
                         '--changelog',
                         default='Initial import',
@@ -409,12 +416,21 @@ def main():
                         type=int,
                         default=69,
                         help='Number of Fontconfig config priority')
+    parser.add_argument(
+        '--vf-priority',
+        type=int,
+        default=68,
+        help='Number of Fontconfig config priority for variable font')
     parser.add_argument('-e',
                         '--excludepath',
                         action='append',
                         help='Exclude path from source archives')
+    parser.add_argument('--ignore-error',
+                        nargs='*',
+                        help='Deal with the specific error as warning')
     parser.add_argument('NAME', help='Package name')
     parser.add_argument('VERSION', nargs='?', help='Package version')
+    parser.add_argument('URL', help='Project URL')
 
     args = parser.parse_args()
     if args.json_file:
@@ -425,10 +441,21 @@ def main():
 
     templates = generate(name=args.NAME,
                          version=args.VERSION,
-                         url=args.url,
+                         url=args.URL,
+                         license=args.license,
                          sources=args.source,
                          sourcedir=args.sourcedir,
-                         excludepath=args.excludepath)
+                         changelog=args.changelog,
+                         email=args.email,
+                         username=args.username,
+                         summary=args.summary,
+                         description=args.description,
+                         alias=args.alias,
+                         lang=args.lang,
+                         priority=args.priority,
+                         vf_priority=args.vf_priority,
+                         excludepath=args.excludepath,
+                         ignore_error=args.ignore_error)
     if templates is None:
         sys.exit(1)
 

@@ -29,6 +29,7 @@ try:
     import _debugpath  # noqa: F401
 except ModuleNotFoundError:
     pass
+import pyfontrpmspec.errors as err
 from pyfontrpmspec import font_reader as fr
 from pyfontrpmspec.messages import Message as m
 from pyfontrpmspec import sources as src
@@ -54,6 +55,8 @@ def params(func):
         # Add default values for optional parameters.
         'sourcedir' not in kwargs and kwargs.update({'sourcedir': '.'})
         'excludepath' not in kwargs and kwargs.update({'excludepath': []})
+        'ignore_error' not in kwargs and kwargs.update({'ignore_error': []})
+
         return func(**kwargs)
 
     return wrapper
@@ -61,7 +64,17 @@ def params(func):
 
 @params
 def old2new(specfile: str, **kwargs: Any) -> str:
-    """Convert `specfile` to new one against Packaging Guidelines."""
+    """Convert `specfile` to new one against Packaging Guidelines.
+
+    Currently following keyward arguments are supported:
+
+    'specfile': str - RPM SPEC filename to convert.
+    'sourcedir': str (optional) - Source directory. current directory
+                                  will be used if not.
+    'excludepath': list[str] (optional) - A list of exclusive paths
+                                          for sources.
+    'ignore_error': list[str] (optional) - A list of exception name to ignore.
+    """
     kwargs['specfile'] = specfile
 
     if not shutil.which('rpmspec'):
@@ -151,11 +164,12 @@ def old2new(specfile: str, **kwargs: Any) -> str:
     }
     if len(spec.packages) == 1:
         if len(exdata['fontconfig']) > 1:
-            raise TypeError(m().error('Multiple fontconfig files detected'))
+            m().error('Multiple fontconfig files detected').throw(
+                err.DuplidateFileError, kwargs['ignore_error'])
         data['family'] = families[0]['family']
         if data['family'] not in exdata['fontconfig']:
-            raise TypeError(m().error('No fontconfig file for').message(
-                data['family']))
+            m().error('No fontconfig file for').message(data['family']).throw(
+                err.DuplidateFileError, kwargs['ignore_error'])
         data['summary'] = families[0]['summary']
         data['description'] = families[0]['description']
         data['fontconfig'] = '%{nil}' if len(
@@ -177,11 +191,16 @@ def main():
                         default='-',
                         type=argparse.FileType('w'),
                         help='Output file')
+    parser.add_argument('--ignore-error',
+                        nargs='*',
+                        help='Deal with the specific error as warning')
     parser.add_argument('SPEC', help='Spec file to convert')
 
     args = parser.parse_args()
 
-    templates = old2new(args.SPEC, sourcedir=args.sourcedir)
+    templates = old2new(args.SPEC,
+                        sourcedir=args.sourcedir,
+                        ignore_error=args.ignore_error)
     if templates is None:
         sys.exit(1)
 
