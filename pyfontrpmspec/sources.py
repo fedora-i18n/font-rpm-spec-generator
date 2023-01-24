@@ -21,6 +21,7 @@
 import os
 import re
 import shutil
+import subprocess
 import tempfile
 from lxml import etree
 from pathlib import Path
@@ -163,6 +164,18 @@ class File:
             return True
         else:
             return False
+
+    def is_vf(self) -> bool:
+        """Whether or not the target font file is a variable font."""
+        if not self.is_font():
+            return False
+        fcquery = shutil.which('fc-query')
+        if fcquery is None:
+            raise RuntimeError('fc-query is not installed.')
+        p = subprocess.Popen([fcquery, '-f', '%{variable}\n', self.fullname],
+                             stdout=subprocess.PIPE)
+        b = p.communicate()[0].decode('utf-8').splitlines()
+        return any([i == 'True' for i in b])
 
     def is_fontconfig(self) -> bool:
         """Whether or not the targeted file is a fontconfig config file."""
