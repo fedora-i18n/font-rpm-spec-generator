@@ -122,11 +122,8 @@ def generate(name: str, sources: str | list[str], url: str,
         1) if ma else None
     if version is None:
         raise TypeError(m().error('Unable to guess version number'))
-    exdata = src.extract(kwargs['name'],
-                         version,
-                         kwargs['sources'],
-                         kwargs['sourcedir'],
-                         excludepath=kwargs['excludepath'])
+    kwargs['version'] = version
+    exdata = src.extract(**kwargs)
 
     if 'licenses' not in exdata:
         raise TypeError(m().error('No license files detected'))

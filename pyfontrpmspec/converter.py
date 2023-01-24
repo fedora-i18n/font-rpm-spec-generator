@@ -53,6 +53,7 @@ def params(func):
         kwargs.update(zip(func.__code__.co_varnames, args))
         # Add default values for optional parameters.
         'sourcedir' not in kwargs and kwargs.update({'sourcedir': '.'})
+        'excludepath' not in kwargs and kwargs.update({'excludepath': []})
         return func(**kwargs)
 
     return wrapper
@@ -68,8 +69,7 @@ def old2new(specfile: str, **kwargs: Any) -> str:
     origspec = Spec.from_file(specfile)
     ss = subprocess.run(['rpmspec', '-P', specfile], stdout=subprocess.PIPE)
     spec = Spec.from_string(ss.stdout.decode('utf-8'))
-    exdata = src.extract(spec.name, spec.version, spec.sources,
-                         kwargs['sourcedir'])
+    exdata = src.extract(spec.name, spec.version, spec.sources, **kwargs)
 
     validate_exdata(exdata)
     if len(spec.patches) > 1:
