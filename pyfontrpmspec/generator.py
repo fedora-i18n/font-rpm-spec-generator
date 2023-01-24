@@ -25,6 +25,7 @@ import os
 import pwd
 import re
 import sys
+from collections import OrderedDict
 from datetime import date
 from babel.dates import format_date
 from pathlib import Path
@@ -143,7 +144,8 @@ def generate(name, sources, url, **kwargs: Any) -> dict[str, Any]:
     data = {}
     families = []
     fontconfig = []
-    for k, v in fr.group(exdata['fontinfo']).items():
+    for k, v in OrderedDict(sorted(fr.group(
+            exdata['fontinfo']).items())).items():
         if len(v[0]['fontinfo']['alias']) > 1:
             m([': '
                ]).info(k).warning('Multiple generic alias was detected').info(

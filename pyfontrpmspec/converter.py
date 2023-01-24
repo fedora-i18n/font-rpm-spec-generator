@@ -22,6 +22,7 @@ import argparse
 import shutil
 import subprocess
 import sys
+from collections import OrderedDict
 from pyrpm.spec import Spec
 try:
     import _debugpath  # noqa: F401
@@ -64,7 +65,7 @@ def old2new(specfile: str, args: object) -> str:
         exdata['setup'] = '-n {}'.format(exdata['root'])
     families = []
     fontconfig = []
-    for k, v in fr.group(exdata['fontinfo']).items():
+    for k, v in OrderedDict(fr.group(exdata['fontinfo']).items()).items():
         if 'fontmap' in exdata and k in exdata['fontmap']:
             k = exdata['fontmap'][k]
         summary = None
