@@ -214,7 +214,8 @@ def generate(name: str, sources: str | list[str], url: str,
         'license_file':
         ' '.join([s.name for s in exdata['licenses']]),
         'docs':
-        ' '.join([s.name for s in exdata['docs']]),
+        ' '.join([s.name for s in exdata['docs']])
+        if len(exdata['docs']) > 0 else '%{nil}',
         'foundry':
         exdata['foundry'],
         'fonts':
