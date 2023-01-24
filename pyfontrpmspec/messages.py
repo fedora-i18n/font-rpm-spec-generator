@@ -18,6 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """Module to deal with messages."""
 
+import re
 import sys
 from termcolor import colored
 from typing import Self
@@ -72,6 +73,16 @@ class Message:
     def out(self) -> None:
         """Output all the strings held in this object into stderr."""
         print(self._message, flush=True, file=sys.stderr)
+
+    def throw(self, klass, exclude: list[str] = []) -> None:
+        """Raise exception."""
+        if exclude is None:
+            exclude = []
+        for n in exclude:
+            if re.match(r'{}'.format(n.lower()), klass.__name__.lower()):
+                self.ignored().out()
+                return
+        raise klass(self._message)
 
     def __str__(self) -> str:
         """Convert messages to str."""
