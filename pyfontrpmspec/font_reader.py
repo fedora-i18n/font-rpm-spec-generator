@@ -90,6 +90,7 @@ def font_meta_reader(fontfile: str, font_number: int = 0) -> dict[str, Any]:
     fc = FontClass(fontfile, faceId=font_number)
     meta_data['alias'] = fc.get_alias_name()
     meta_data['hashint'] = True if 'prep' in font or 'cvt' in font else False
+    meta_data['variable'] = True if 'fvar' in font and 'gvar' in font else False
     return meta_data
 
 
@@ -110,12 +111,13 @@ def group(families: dict[str, Any]) -> dict[str, dict[str, Any]]:
     x = sorted(families.items(), key=lambda x: len(x[1]['family']))
     for k, v in x:
         found = False
+        family = v['family'] if not v['variable'] else v['family'] + ' VF'
         for f in retval.keys():
-            if re.fullmatch(r'{}'.format(f), v['family']):
-                retval[v['family']].append({'fontinfo': v, 'file': k})
+            if re.fullmatch(r'{}'.format(f), family):
+                retval[family].append({'fontinfo': v, 'file': k})
                 found = True
         if not found:
-            retval[v['family']] = [{'fontinfo': v, 'file': k}]
+            retval[family] = [{'fontinfo': v, 'file': k}]
     return retval
 
 
