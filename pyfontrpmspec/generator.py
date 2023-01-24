@@ -81,7 +81,8 @@ def params(func):
 
 
 @params
-def generate(name, sources, url, **kwargs: Any) -> dict[str, Any]:
+def generate(name: str, sources: str | list[str], url: str,
+             **kwargs: Any) -> dict[str, Any]:
     """Generate a spec file.
 
     Currently following keyword arguments are supported:
