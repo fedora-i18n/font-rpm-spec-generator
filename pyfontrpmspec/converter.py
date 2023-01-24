@@ -24,6 +24,7 @@ import subprocess
 import sys
 from collections import OrderedDict
 from pyrpm.spec import Spec
+from typing import Any
 try:
     import _debugpath  # noqa: F401
 except ModuleNotFoundError:
@@ -35,34 +36,50 @@ from pyfontrpmspec import template
 from pyfontrpmspec.package import Package
 
 
-def old2new(specfile: str, args: object) -> str:
-    """Convert `specfile` to new one against Packaging Guidelines."""
-    if not shutil.which('rpmspec'):
-        raise AttributeError(m().error('rpmspec is not installed'))
-    origspec = Spec.from_file(specfile)
-    ss = subprocess.run(['rpmspec', '-P', specfile], stdout=subprocess.PIPE)
-    spec = Spec.from_string(ss.stdout.decode('utf-8'))
-    exdata = src.extract(spec.name, spec.version, spec.sources, args.sourcedir)
-
+def validate_exdata(exdata):
+    """Validate exdata returned by sources.extract."""
     if 'licenses' not in exdata:
         raise TypeError(m().error('No license files detected'))
     if 'fonts' not in exdata:
         raise TypeError(m().error('No fonts files detected'))
     if 'fontconfig' not in exdata:
         raise TypeError(m().error('No fontconfig files detected'))
+
+
+def params(func):
+    """Decorate function to initialize default parameters."""
+
+    def wrapper(*args, **kwargs):
+        kwargs.update(zip(func.__code__.co_varnames, args))
+        # Add default values for optional parameters.
+        'sourcedir' not in kwargs and kwargs.update({'sourcedir': '.'})
+        return func(**kwargs)
+
+    return wrapper
+
+
+@params
+def old2new(specfile: str, **kwargs: Any) -> str:
+    """Convert `specfile` to new one against Packaging Guidelines."""
+    kwargs['specfile'] = specfile
+
+    if not shutil.which('rpmspec'):
+        raise AttributeError(m().error('rpmspec is not installed'))
+    origspec = Spec.from_file(specfile)
+    ss = subprocess.run(['rpmspec', '-P', specfile], stdout=subprocess.PIPE)
+    spec = Spec.from_string(ss.stdout.decode('utf-8'))
+    exdata = src.extract(spec.name, spec.version, spec.sources,
+                         kwargs['sourcedir'])
+
+    validate_exdata(exdata)
     if len(spec.patches) > 1:
         for p in spec.patches:
             m([': ']).info(p).warning(
                 'Ignoring patch file. they have to be done manually').out()
 
-    if not exdata['archive']:
-        exdata['setup'] = '-c -T'
-    elif not exdata['root']:
-        exdata['setup'] = ''
-    elif exdata['root'] == '.':
-        exdata['setup'] = '-c'
-    else:
-        exdata['setup'] = '-n {}'.format(exdata['root'])
+    exdata['setup'] = '-c -T' if not exdata['archive'] else '' if not exdata[
+        'root'] else '-c' if exdata['root'] == '.' else '-n {}'.format(
+            exdata['root'])
     families = []
     fontconfig = []
     for k, v in OrderedDict(fr.group(exdata['fontinfo']).items()).items():
@@ -72,12 +89,10 @@ def old2new(specfile: str, args: object) -> str:
         description = None
         for p in spec.packages:
             if Package.is_targeted_package(p.name, exdata['foundry'], k):
-                if p.name == spec.name:
-                    summary = spec.summary
-                    description = spec.description
-                else:
-                    summary = p.summary
-                    description = p.description
+                (summary,
+                 description) = (spec.summary, spec.description
+                                 ) if p.name == spec.name else (p.summary,
+                                                                p.description)
         if not summary:
             m([': ']).info(k).warning(
                 ('Unable to guess the existing package name. '
@@ -166,7 +181,7 @@ def main():
 
     args = parser.parse_args()
 
-    templates = old2new(args.SPEC, args)
+    templates = old2new(args.SPEC, sourcedir=args.sourcedir)
     if templates is None:
         sys.exit(1)
 
