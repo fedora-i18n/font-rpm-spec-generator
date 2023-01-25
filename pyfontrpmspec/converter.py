@@ -132,6 +132,8 @@ def old2new(specfile: str, **kwargs: Any) -> str:
         origspec.release,
         'url':
         spec.url,
+        'common_description':
+        '',
         'origsource':
         origspec.sources[0],
         'source':

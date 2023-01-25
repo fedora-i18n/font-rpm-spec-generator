@@ -129,6 +129,8 @@ def generate(name: str, sources: str | list[str], url: str,
     kwargs['name'] = name
     kwargs['sources'] = sources
     kwargs['url'] = url
+    kwargs['common_description'] is None and kwargs.update(
+        {'common_description': ''})
     kwargs['autorelease_opt'] is None and kwargs.update(
         {'autorelease_opt': ''})
     retval = {'spec': None, 'fontconfig': []}
