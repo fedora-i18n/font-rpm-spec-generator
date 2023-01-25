@@ -194,7 +194,8 @@ def generate(name: str, sources: str | list[str], url: str,
         families.append(info)
         c = FontconfigGenerator()
         for a in [vvv for vv in v for vvv in vv['fontinfo']['alias']]:
-            c.add(a, k, kwargs['lang'], v[0]['fontinfo']['hashint'])
+            c.add(a, v[0]['fontinfo']['family'], kwargs['lang'],
+                  v[0]['fontinfo']['hashint'])
         c.set_fn(
             kwargs['priority']
             if not v[0]['fontinfo']['variable'] else kwargs['vf_priority'],
