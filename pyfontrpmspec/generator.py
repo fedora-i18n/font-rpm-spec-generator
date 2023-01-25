@@ -56,6 +56,8 @@ def params(func):
             'description': ('This package contains {family} which is a {alias}'
                             ' typeface of {type} font.')
         })
+        'common_description' not in kwargs and kwargs.update(
+            {'common_description': ''})
         'email' not in kwargs and kwargs.update(
             {'email': os.environ.get('EMAIL')})
         'excludepath' not in kwargs and kwargs.update({'excludepath': []})
@@ -78,6 +80,9 @@ def params(func):
         'username' not in kwargs and kwargs.update(
             {'username': pwd.getpwnam(getpass.getuser()).pw_gecos})
         'version' not in kwargs and kwargs.update({'version': None})
+        'rpmautospec' not in kwargs and kwargs.update({'rpmautospec': True})
+        'autorelease_opt' not in kwargs and kwargs.update(
+            {'autorelease_opt': ''})
         return func(**kwargs)
 
     return wrapper
@@ -96,6 +101,9 @@ def generate(name: str, sources: str | list[str], url: str,
     'alias': str (optional) - Alias name for targeted family.
     'changelog': str (optional) - changelog entry.
     'description': str (optional) - Package description.
+    'common_description': str (optional) - Common package description.
+                                           This is used only when generating
+                                           multi packages.
     'email': str (optional) - A mail address for maintainer.
     'excludepath': list[str] (optional) - A list of exclusive paths
                                           for sources.
@@ -115,10 +123,14 @@ def generate(name: str, sources: str | list[str], url: str,
     This function returns dict with following key and values:
     'spec': str - RPM spec
     'fontconfig': FontconfigGenerator - fontconfig file to be output
+    'rpmautospec': bool - True to use rpmautospec otherwise False.
+    'autorelease_opt': str - Extra arguments to %autorelease.
     """
     kwargs['name'] = name
     kwargs['sources'] = sources
     kwargs['url'] = url
+    kwargs['autorelease_opt'] is None and kwargs.update(
+        {'autorelease_opt': ''})
     retval = {'spec': None, 'fontconfig': []}
 
     ma = re.match(
@@ -196,13 +208,22 @@ def generate(name: str, sources: str | list[str], url: str,
     source = kwargs['sources'][0] if urlparse(
         kwargs['sources'][0], allow_fragments=True).scheme else Path(
             kwargs['sources'][0]).name
+    release = '1' if not kwargs['rpmautospec'] else '%autorelease{}{}'.format(
+        '' if len(kwargs['autorelease_opt']) == 0 else ' ',
+        kwargs['autorelease_opt'])
+    changelog = '* {} {} <{}> - {}-1\n- {}'.format(
+        format_date(date.today(), "EEE MMM dd yyyy",
+                    locale='en'), kwargs['username'], kwargs['email'], version,
+        kwargs['changelog']) if not kwargs['rpmautospec'] else '%autochangelog'
     data = {
         'version':
         version,
         'release':
-        1,
+        release,
         'url':
         kwargs['url'],
+        'common_description':
+        kwargs['common_description'],
         'source':
         source,
         'copy_source':
@@ -227,9 +248,7 @@ def generate(name: str, sources: str | list[str], url: str,
         'setup':
         exdata['setup'],
         'changelog':
-        '* {} {} <{}> - {}-1\n- {}'.format(
-            format_date(date.today(), "EEE MMM dd yyyy", locale='en'),
-            kwargs['username'], kwargs['email'], version, kwargs['changelog']),
+        changelog,
     }
     if len(families) == 1:
         data['family'] = families[0]['family']
@@ -407,6 +426,10 @@ def main():
         default=('This package contains {family} which is a {alias}'
                  ' typeface of {type} font.'),
         help='Package description')
+    parser.add_argument(
+        '--common-description',
+        help=('Common package description. '
+              'this is only used when generating multi packages.'))
     parser.add_argument('-a',
                         '--alias',
                         default='auto',
@@ -428,6 +451,12 @@ def main():
                         '--excludepath',
                         action='append',
                         help='Exclude path from source archives')
+    parser.add_argument('--rpmautospec',
+                        action=argparse.BooleanOptionalAction,
+                        default=True,
+                        help='Use rpmautospec.')
+    parser.add_argument('--autorelease-opt',
+                        help='Extra arguments to %autorelease.')
     parser.add_argument('--ignore-error',
                         nargs='*',
                         help='Deal with the specific error as warning')
@@ -453,12 +482,15 @@ def main():
                          username=args.username,
                          summary=args.summary,
                          description=args.description,
+                         common_description=args.common_description,
                          alias=args.alias,
                          lang=args.lang,
                          priority=args.priority,
                          vf_priority=args.vf_priority,
                          excludepath=args.excludepath,
-                         ignore_error=args.ignore_error)
+                         ignore_error=args.ignore_error,
+                         rpmautospec=args.rpmautospec,
+                         autorelease_opt=args.autorelease_opt)
     if templates is None:
         sys.exit(1)
 
