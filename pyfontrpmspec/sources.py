@@ -50,8 +50,8 @@ def unpack_zip(fn, path, *args):
                              '..') else fn
         if fn != fixedfn:
             m([': ', '']).info(fn).warning(
-                'This file are going to be created outside of the extracted directory. adjusting...'
-            ).out()
+                ('This file are going to be created outside of '
+                 'the extracted directory. adjusting...')).out()
         info = zipf.getinfo(fn)
         if info.is_dir():
             (d / fixedfn).mkdir(parents=True)
@@ -59,6 +59,12 @@ def unpack_zip(fn, path, *args):
             with zipf.open(fn) as i, (d / fixedfn).open(mode='wb') as o:
                 shutil.copyfileobj(i, o)
     zipf.close()
+
+
+shutil.register_unpack_format('zip',
+                              '.zip',
+                              unpack_zip,
+                              description='Custom ZIP unpacker')
 
 
 class File:
@@ -276,10 +282,6 @@ class Source:
                 m([': ']).info(self.name).error('file not found'))
         self._tempdir = tempfile.TemporaryDirectory()
         try:
-            shutil.register_unpack_format('zip',
-                                          '.zip',
-                                          unpack_zip,
-                                          description='Custom ZIP unpacker')
             shutil.unpack_archive(self.fullname, self._tempdir.name)
             self._is_archive = True
             for root, dirs, files in os.walk(self._tempdir.name):
