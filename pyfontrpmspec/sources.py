@@ -23,6 +23,7 @@ import re
 import shutil
 import subprocess
 import tempfile
+import zipfile
 from lxml import etree
 from pathlib import Path
 try:
@@ -33,6 +34,31 @@ from pyfontrpmspec import font_reader as fr
 from pyfontrpmspec.messages import Message as m
 from urllib.parse import urlparse
 from typing import Iterator, Any
+
+
+def unpack_zip(fn, path, *args):
+    """Unpack ZIP file."""
+    d = Path(path)
+    if not d.exists():
+        d.mkdir(parents=True)
+
+    zipf = zipfile.ZipFile(fn, 'r')
+    for fn in zipf.namelist():
+        fixedfn = os.path.join(
+            *list(filter(lambda x: x != '..',
+                         Path(os.path.normpath(fn)).parts))) if fn.startswith(
+                             '..') else fn
+        if fn != fixedfn:
+            m([': ', '']).info(fn).warning(
+                'This file are going to be created outside of the extracted directory. adjusting...'
+            ).out()
+        info = zipf.getinfo(fn)
+        if info.is_dir():
+            (d / fixedfn).mkdir(parents=True)
+        else:
+            with zipf.open(fn) as i, (d / fixedfn).open(mode='wb') as o:
+                shutil.copyfileobj(i, o)
+    zipf.close()
 
 
 class File:
@@ -250,6 +276,10 @@ class Source:
                 m([': ']).info(self.name).error('file not found'))
         self._tempdir = tempfile.TemporaryDirectory()
         try:
+            shutil.register_unpack_format('zip',
+                                          '.zip',
+                                          unpack_zip,
+                                          description='Custom ZIP unpacker')
             shutil.unpack_archive(self.fullname, self._tempdir.name)
             self._is_archive = True
             for root, dirs, files in os.walk(self._tempdir.name):
