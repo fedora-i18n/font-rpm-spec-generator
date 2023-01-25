@@ -134,8 +134,10 @@ def generate(name: str, sources: str | list[str], url: str,
     if len(exdata['licenses']) == 0:
         m().error('No license files detected').throw(err.MissingFileError,
                                                      kwargs['ignore_error'])
-    if 'fonts' not in exdata:
-        raise TypeError(m().error('No fonts files detected'))
+    if len(exdata['fonts']) == 0:
+        # Ignoring this isn't useful at all. don't pass kwargs['ignore_error']
+        # intentionally
+        m().error('No fonts files detected').throw(err.MissingFileError)
 
     if not exdata['archive']:
         exdata['setup'] = '-c -T'
