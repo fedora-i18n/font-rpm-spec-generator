@@ -29,8 +29,7 @@ BuildRequires: fonts-rpm-macros >= 1:2.0.5-9
 
 # A text block that can be reused as part of the description of each generated
 # subpackage.
-%global common_description %{expand:
-{{ common_description }}
+%global common_description %{expand:{{ common_description }}
 }
 
 # Declaration for the subpackage containing the first font family. Also used as
