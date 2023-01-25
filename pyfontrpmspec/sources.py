@@ -178,7 +178,7 @@ class File:
         """Whether or not the targeted file is a document."""
         if re.search(r'(?i:readme|news*)', self.name):
             return True
-        elif self.name.endswith('.txt'):
+        elif self.name.endswith('.txt') and self.name != 'requirements.txt':
             return True
         else:
             return False
