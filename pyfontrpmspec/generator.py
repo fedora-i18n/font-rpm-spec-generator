@@ -25,6 +25,7 @@ import os
 import pwd
 import re
 import sys
+import textwrap
 from collections import OrderedDict
 from datetime import date
 from babel.dates import format_date
@@ -226,7 +227,7 @@ def generate(name: str, sources: str | list[str], url: str,
         'url':
         kwargs['url'],
         'common_description':
-        kwargs['common_description'],
+        '\n'.join(textwrap.wrap(kwargs['common_description'])),
         'source':
         source,
         'copy_source':
@@ -256,7 +257,8 @@ def generate(name: str, sources: str | list[str], url: str,
     if len(families) == 1:
         data['family'] = families[0]['family']
         data['summary'] = families[0]['summary']
-        data['description'] = families[0]['description']
+        data['description'] = '\n'.join(
+            textwrap.wrap(families[0]['description']))
         data['fontconfig'] = '%{nil}' if len(
             data['fontconfig']) == 0 else data['fontconfig'][0]
         data['fonts'] = families[0]['fonts']
