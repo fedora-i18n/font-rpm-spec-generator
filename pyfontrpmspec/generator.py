@@ -147,7 +147,8 @@ def generate(name: str, sources: str | list[str], url: str,
     if version is None:
         raise TypeError(m().error('Unable to guess version number'))
     v = version.split(':')
-    (kwargs['epoch'], kwargs['version']) = v if len(v) == 2 else (None, v[0])
+    (kwargs['epoch'],
+     kwargs['version']) = v if len(v) == 2 else (kwargs['epoch'], v[0])
     kwargs['epoch'] is not None and extra_headers.update(
         {'Epoch': kwargs['epoch']})
 
