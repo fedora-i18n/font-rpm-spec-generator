@@ -57,6 +57,7 @@ def params(func):
             'description': ('This package contains {family} which is a {alias}'
                             ' typeface of {type} font.')
         })
+        'epoch' not in kwargs and kwargs.update({'epoch': None})
         'common_description' not in kwargs and kwargs.update(
             {'common_description': ''})
         'email' not in kwargs and kwargs.update(
@@ -102,6 +103,7 @@ def generate(name: str, sources: str | list[str], url: str,
     'alias': str (optional) - Alias name for targeted family.
     'changelog': str (optional) - changelog entry.
     'description': str (optional) - Package description.
+    'epoch': int (optional) - Epoch number.
     'common_description': str (optional) - Common package description.
                                            This is used only when generating
                                            multi packages.
@@ -135,6 +137,7 @@ def generate(name: str, sources: str | list[str], url: str,
     kwargs['autorelease_opt'] is None and kwargs.update(
         {'autorelease_opt': ''})
     retval = {'spec': None, 'fontconfig': []}
+    extra_headers = {}
 
     ma = re.match(
         r'^{}-v?(((?!tar|zip)[0-9.a-zA-Z])+)\..*'.format(kwargs['name']),
@@ -143,7 +146,11 @@ def generate(name: str, sources: str | list[str], url: str,
         1) if ma else None
     if version is None:
         raise TypeError(m().error('Unable to guess version number'))
-    kwargs['version'] = version
+    v = version.split(':')
+    (kwargs['epoch'], kwargs['version']) = v if len(v) == 2 else (None, v[0])
+    kwargs['epoch'] is not None and extra_headers.update(
+        {'Epoch': kwargs['epoch']})
+
     exdata = src.extract(**kwargs)
 
     if len(exdata['licenses']) == 0:
@@ -221,11 +228,13 @@ def generate(name: str, sources: str | list[str], url: str,
         kwargs['changelog']) if not kwargs['rpmautospec'] else '%autochangelog'
     data = {
         'version':
-        version,
+        kwargs['version'],
         'release':
         release,
         'url':
         kwargs['url'],
+        'extra_headers':
+        '\n'.join(['{}: {}'.format(k, v) for k, v in extra_headers.items()]),
         'common_description':
         '\n'.join(textwrap.wrap(kwargs['common_description'])),
         'source':

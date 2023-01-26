@@ -83,6 +83,8 @@ def old2new(specfile: str, **kwargs: Any) -> str:
     ss = subprocess.run(['rpmspec', '-P', specfile], stdout=subprocess.PIPE)
     spec = Spec.from_string(ss.stdout.decode('utf-8'))
     exdata = src.extract(spec.name, spec.version, spec.sources, **kwargs)
+    extra_headers = {}
+    spec.epoch and extra_headers.update({'Epoch': spec.epoch})
 
     validate_exdata(exdata)
     if len(spec.patches) > 1:
@@ -132,6 +134,8 @@ def old2new(specfile: str, **kwargs: Any) -> str:
         origspec.release,
         'url':
         spec.url,
+        'extra_headers':
+        '\n'.join(['{}: {}'.format(k, v) for k, v in extra_headers.items()]),
         'common_description':
         '',
         'origsource':

@@ -17,6 +17,7 @@ Version: {{ version }}
 Release: {{ release }}
 URL:     {{ url }}
 BuildRequires: fonts-rpm-macros >= 1:2.0.5-9
+{{ extra_headers }}
 
 # The following declarations will be aliased to [variable]0 and reused for all
 # generated *-fonts packages unless overriden by a specific [variable][number]
