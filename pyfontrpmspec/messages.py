@@ -26,6 +26,7 @@ from typing import Self
 
 class Message:
     """Colorize message text in a structured way."""
+    quiet = False
 
     def __init__(self, joiner: list[str] = [' ']):
         """Initialize Message class."""
@@ -72,7 +73,8 @@ class Message:
 
     def out(self) -> None:
         """Output all the strings held in this object into stderr."""
-        print(self._message, flush=True, file=sys.stderr)
+        if not Message().quiet:
+            print(self._message, flush=True, file=sys.stderr)
 
     def throw(self, klass, exclude: list[str] = []) -> None:
         """Raise exception."""
