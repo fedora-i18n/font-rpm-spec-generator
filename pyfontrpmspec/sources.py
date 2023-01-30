@@ -73,7 +73,9 @@ def unpack_rpm(fn, path, *args):
         m([': '
            ]).info('rpm2cpio').error('command not found.').throw(RuntimeError)
     rpm2cpio = subprocess.Popen([rpm2cpiocmd, fn], stdout=subprocess.PIPE)
-    subprocess.check_call(('cpio', '-i', '-d'), stdin=rpm2cpio.stdout)
+    subprocess.check_call(('cpio', '-i', '-d'),
+                          stdin=rpm2cpio.stdout,
+                          stderr=subprocess.DEVNULL)
     rpm2cpio.communicate()
     if rpm2cpio.returncode != 0:
         m([': ']).error('Unpacking RPM failed with return code').message(
