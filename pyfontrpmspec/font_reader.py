@@ -84,6 +84,7 @@ def font_meta_reader(fontfile: str, font_number: int = 0) -> dict[str, Any]:
                                               and fmd.langID == 0):
             meta_data[NAME_TABLE.get(fmd.nameID, False)] = fmd.toStr()
     meta_data['foundry'] = transform_foundry(font['OS/2'].achVendID)
+    meta_data['font_revision'] = font['head'].fontRevision
     meta_data['family'] = get_better_family(meta_data)
     meta_data[
         'type'] = 'OpenType' if font.sfntVersion == 'OTTO' else 'TrueType'
