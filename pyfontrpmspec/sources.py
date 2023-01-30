@@ -61,8 +61,37 @@ def unpack_zip(fn, path, *args):
     zipf.close()
 
 
-shutil.register_unpack_format('zip',
-                              '.zip',
+def unpack_rpm(fn, path, *args):
+    """Unpack RPM file."""
+    d = Path(path)
+    if not d.exists():
+        d.mkdir(parents=True)
+
+    os.chdir(path)
+    rpm2cpiocmd = shutil.which('rpm2cpio')
+    if rpm2cpiocmd is None:
+        m([': '
+           ]).info('rpm2cpio').error('command not found.').throw(RuntimeError)
+    rpm2cpio = subprocess.Popen([rpm2cpiocmd, fn], stdout=subprocess.PIPE)
+    subprocess.check_call(('cpio', '-i', '-d'), stdin=rpm2cpio.stdout)
+    rpm2cpio.communicate()
+    if rpm2cpio.returncode != 0:
+        m([': ']).error('Unpacking RPM failed with return code').message(
+            rpm2cpio.returncode).throw(RuntimeError)
+
+
+try:
+    shutil.unregister_unpack_format('rpm')
+except KeyError:
+    pass
+shutil.register_unpack_format('rpm', ['.rpm'],
+                              unpack_rpm,
+                              description='Unpack RPM')
+try:
+    shutil.unregister_unpack_format('zip')
+except KeyError:
+    pass
+shutil.register_unpack_format('zip', ['.zip'],
                               unpack_zip,
                               description='Custom ZIP unpacker')
 
@@ -371,6 +400,20 @@ class Sources:
         yield from self._sources
 
 
+def params(func):
+    """Decorate function to initialize default parameters."""
+
+    def wrapper(*args, **kwargs):
+        kwargs.update(zip(func.__code__.co_varnames, args))
+        # Add default values for optional parameters.
+        'excludepath' not in kwargs and kwargs.update({'excludepath': []})
+
+        return func(**kwargs)
+
+    return wrapper
+
+
+@params
 def extract(name: str, version: str, sources: list[str], sourcedir: str,
             **kwargs: Any) -> dict[str, Any]:
     """Extract source files and gather information."""
@@ -385,8 +428,6 @@ def extract(name: str, version: str, sources: list[str], sourcedir: str,
         'fontinfo': {},
         'archive': False
     }
-    'excludepath' not in kwargs or kwargs[
-        'excludepath'] is None and kwargs.update({'excludepath': []})
     sources = Sources(arrays=sources, sourcedir=sourcedir)
     nsource = 20
     exists = {}
