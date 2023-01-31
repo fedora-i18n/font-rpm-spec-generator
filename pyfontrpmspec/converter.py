@@ -56,6 +56,7 @@ def params(func):
         'sourcedir' not in kwargs and kwargs.update({'sourcedir': '.'})
         'excludepath' not in kwargs and kwargs.update({'excludepath': []})
         'ignore_error' not in kwargs and kwargs.update({'ignore_error': []})
+        'pkgheader' not in kwargs and kwargs.update({'pkgheader': {}})
 
         return func(**kwargs)
 
@@ -74,6 +75,7 @@ def old2new(specfile: str, **kwargs: Any) -> str:
     'excludepath': list[str] (optional) - A list of exclusive paths
                                           for sources.
     'ignore_error': list[str] (optional) - A list of exception name to ignore.
+    'pkgheader': dict[str, list[str]] (optional) - A list of package header lines.
     """
     kwargs['specfile'] = specfile
 
@@ -102,6 +104,8 @@ def old2new(specfile: str, **kwargs: Any) -> str:
             k = exdata['fontmap'][k]
         summary = None
         description = None
+        pkgheader = [] if k not in kwargs['pkgheader'] else kwargs[
+            'pkgheader'][k]
         for p in spec.packages:
             if Package.is_targeted_package(p.name, exdata['foundry'], k):
                 (summary,
@@ -123,6 +127,7 @@ def old2new(specfile: str, **kwargs: Any) -> str:
             len(families) + 10 if k in exdata['fontconfig'] else '%{nil}',
             'exconf': '%{nil}',
             'description': description,
+            'pkgheader': '\n'.join(pkgheader),
         }
         families.append(info)
         if k in exdata['fontconfig']:
@@ -181,6 +186,7 @@ def old2new(specfile: str, **kwargs: Any) -> str:
         data['fontconfig'] = '%{nil}' if len(
             data['fontconfig']) == 0 else data['fontconfig'][0]
         data['fonts'] = families[0]['fonts']
+        data['pkgheader'] = families[0]['pkgheader']
 
     return template.get(len(spec.packages), data)
 

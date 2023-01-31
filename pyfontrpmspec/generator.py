@@ -85,6 +85,7 @@ def params(func):
         'rpmautospec' not in kwargs and kwargs.update({'rpmautospec': True})
         'autorelease_opt' not in kwargs and kwargs.update(
             {'autorelease_opt': ''})
+        'pkgheader' not in kwargs and kwargs.update({'pkgheader': {}})
         return func(**kwargs)
 
     return wrapper
@@ -122,12 +123,13 @@ def generate(name: str, sources: str | list[str], url: str,
     'username': str (optional) - A name of package maintainer.
     'version': str (optional) - Archive version. if not specified,
                                 it will be guessed from the source.
+    'rpmautospec': bool (optional) - True to use rpmautospec otherwise False.
+    'autorelease_opt': str (optional) - Extra arguments to %autorelease.
+    'pkgheader': dict[str, list[str]] (optional) - Package header lines.
 
     This function returns dict with following key and values:
     'spec': str - RPM spec
     'fontconfig': FontconfigGenerator - fontconfig file to be output
-    'rpmautospec': bool - True to use rpmautospec otherwise False.
-    'autorelease_opt': str - Extra arguments to %autorelease.
     """
     kwargs['name'] = name
     kwargs['sources'] = sources
@@ -182,6 +184,8 @@ def generate(name: str, sources: str | list[str], url: str,
                    v[0]['fontinfo']['alias']).out()
         if kwargs['alias'] == 'auto':
             kwargs['alias'] = v[0]['fontinfo']['alias'][0]
+        pkgheader = [] if k not in kwargs['pkgheader'] else kwargs[
+            'pkgheader'][k]
         info = {
             'family':
             k,
@@ -201,6 +205,8 @@ def generate(name: str, sources: str | list[str], url: str,
             kwargs['description'].format(family=k,
                                          alias=kwargs['alias'],
                                          type=v[0]['fontinfo']['type']),
+            'pkgheader':
+            '\n'.join(pkgheader)
         }
         families.append(info)
         c = FontconfigGenerator()
@@ -272,6 +278,7 @@ def generate(name: str, sources: str | list[str], url: str,
         data['fontconfig'] = '%{nil}' if len(
             data['fontconfig']) == 0 else data['fontconfig'][0]
         data['fonts'] = families[0]['fonts']
+        data['pkgheader'] = families[0]['pkgheader']
 
     retval.update(template.get(len(families), data))
     return retval

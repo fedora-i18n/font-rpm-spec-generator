@@ -57,6 +57,8 @@ BuildRequires: fonts-rpm-macros >= 1:2.0.5-9
 # the Basic Latin Unicode block.
 %global fontfamily        {{ family }}
 %global fontsummary       {{ summary }}
+%global fontpkgheader     %{expand:{{ pkgheader }}
+}
 #
 # More shell glob lists:
 # – font family files

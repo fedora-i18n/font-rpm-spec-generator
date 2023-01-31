@@ -39,7 +39,7 @@ BuildRequires: fonts-rpm-macros >= 1:2.0.5-9
 {% for n in range(fonts| length) %}
 %global fontfamily{{ n }}       {{ fonts[n]['family'] }}
 %global fontsummary{{ n }}      {{ fonts[n]['summary'] }}
-%global fontpkgheader{{ n }}    %{expand:
+%global fontpkgheader{{ n }}    %{expand:{{ fonts[n]['pkgheader'] }}
 }
 %global fonts{{ n }}            {{ fonts[n]['fonts'] }}
 %global fontsex{{ n }}          {{ fonts[n]['exfonts'] }}
