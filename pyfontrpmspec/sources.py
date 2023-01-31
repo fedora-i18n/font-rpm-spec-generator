@@ -213,7 +213,7 @@ class File:
 
     def is_doc(self) -> bool:
         """Whether or not the targeted file is a document."""
-        if re.search(r'(?i:readme|news*)', self.name):
+        if re.search(r'(?i:readme|news.*)', self.name):
             return True
         elif self.name.endswith('.txt') and self.name != 'requirements.txt':
             return True
