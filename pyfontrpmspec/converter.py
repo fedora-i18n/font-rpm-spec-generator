@@ -57,6 +57,7 @@ def params(func):
         'excludepath' not in kwargs and kwargs.update({'excludepath': []})
         'ignore_error' not in kwargs and kwargs.update({'ignore_error': []})
         'pkgheader' not in kwargs and kwargs.update({'pkgheader': {}})
+        'foundry' not in kwargs and kwargs.update({'foundry': None})
 
         return func(**kwargs)
 
@@ -99,6 +100,8 @@ def old2new(specfile: str, **kwargs: Any) -> str:
             exdata['root'])
     families = []
     fontconfig = []
+    foundry = kwargs['foundry'] if kwargs['foundry'] is not None else exdata[
+        'foundry']
     for k, v in OrderedDict(fr.group(exdata['fontinfo']).items()).items():
         if 'fontmap' in exdata and k in exdata['fontmap']:
             k = exdata['fontmap'][k]
@@ -107,7 +110,7 @@ def old2new(specfile: str, **kwargs: Any) -> str:
         pkgheader = [] if k not in kwargs['pkgheader'] else kwargs[
             'pkgheader'][k]
         for p in spec.packages:
-            if Package.is_targeted_package(p.name, exdata['foundry'], k):
+            if Package.is_targeted_package(p.name, foundry, k):
                 (summary,
                  description) = (spec.summary, spec.description
                                  ) if p.name == spec.name else (p.summary,
@@ -163,7 +166,7 @@ def old2new(specfile: str, **kwargs: Any) -> str:
         ' '.join([s.name
                   for s in exdata['docs']]) if 'docs' in exdata else '%{nil}',
         'foundry':
-        exdata['foundry'],
+        foundry,
         'fonts':
         families,
         'fontconfig':
@@ -197,6 +200,9 @@ def main():
         description='Fonts RPM spec file converter against guidelines',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
+    parser.add_argument(
+        '--foundry',
+        help='Use this as foundry name instead of figuring out from a font.')
     parser.add_argument('--sourcedir', default='.', help='Source directory')
     parser.add_argument('-o',
                         '--output',
@@ -212,7 +218,8 @@ def main():
 
     templates = old2new(args.SPEC,
                         sourcedir=args.sourcedir,
-                        ignore_error=args.ignore_error)
+                        ignore_error=args.ignore_error,
+                        foundry=args.foundry)
     if templates is None:
         sys.exit(1)
 

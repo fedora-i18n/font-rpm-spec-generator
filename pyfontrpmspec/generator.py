@@ -86,6 +86,7 @@ def params(func):
         'autorelease_opt' not in kwargs and kwargs.update(
             {'autorelease_opt': ''})
         'pkgheader' not in kwargs and kwargs.update({'pkgheader': {}})
+        'foundry' not in kwargs and kwargs.update({'foundry': None})
         return func(**kwargs)
 
     return wrapper
@@ -176,6 +177,8 @@ def generate(name: str, sources: str | list[str], url: str,
     data = {}
     families = []
     fontconfig = []
+    foundry = exdata['foundry'] if kwargs['foundry'] is None else kwargs[
+        'foundry']
     for k, v in OrderedDict(sorted(fr.group(
             exdata['fontinfo']).items())).items():
         if len(v[0]['fontinfo']['alias']) > 1:
@@ -217,9 +220,8 @@ def generate(name: str, sources: str | list[str], url: str,
             kwargs['priority']
             if not v[0]['fontinfo']['variable'] else kwargs['vf_priority'],
             str(
-                FamilyString(exdata['foundry'] + ' ' + re.sub(
-                    r'^{}'.format(exdata['foundry']), '', k)).normalize()) +
-            '-fonts')
+                FamilyString(foundry + ' ' + re.sub(r'^{}'.format(
+                    foundry), '', k)).normalize()) + '-fonts')
         retval['fontconfig'].append(c)
         fontconfig.append(c.get_fn())
 
@@ -260,7 +262,7 @@ def generate(name: str, sources: str | list[str], url: str,
         ' '.join([s.name for s in exdata['docs']])
         if len(exdata['docs']) > 0 else '%{nil}',
         'foundry':
-        exdata['foundry'],
+        foundry,
         'fonts':
         families,
         'fontconfig':
@@ -469,6 +471,9 @@ def main():
         type=int,
         default=68,
         help='Number of Fontconfig config priority for variable font')
+    parser.add_argument(
+        '--foundry',
+        help='Use this as foundry name instead of figuring out from a font')
     parser.add_argument('-e',
                         '--excludepath',
                         action='append',
@@ -512,7 +517,8 @@ def main():
                          excludepath=args.excludepath,
                          ignore_error=args.ignore_error,
                          rpmautospec=args.rpmautospec,
-                         autorelease_opt=args.autorelease_opt)
+                         autorelease_opt=args.autorelease_opt,
+                         foundry=args.foundry)
     if templates is None:
         sys.exit(1)
 
