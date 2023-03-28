@@ -408,7 +408,8 @@ def params(func):
     def wrapper(*args, **kwargs):
         kwargs.update(zip(func.__code__.co_varnames, args))
         # Add default values for optional parameters.
-        'excludepath' not in kwargs and kwargs.update({'excludepath': []})
+        ('excludepath' not in kwargs or
+         kwargs['excludepath'] is None) and kwargs.update({'excludepath': []})
 
         return func(**kwargs)
 
