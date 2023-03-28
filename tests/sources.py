@@ -16,28 +16,40 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+"""Unit test for classes in sources.py."""
 
-from pathlib import Path
 import unittest
-import sys
-sys.path.append(str(Path(__file__).parents[1]))
-from pyfontrpmspec import sources as src
+try:
+    import _debugpath  # noqa: F401
+except ModuleNotFoundError:
+    pass
+from fontrpmspec import sources as src
+
 
 class TestSource(unittest.TestCase):
+    """Test case for Source class."""
 
     def setUp(self):
+        """Initialize common variables."""
         self.license_from_source = src.Source('LICENSE.txt', '/path/to/source')
         self.doc_from_source = src.Source('README.txt', '/path/to/source')
         self.font_from_source = src.Source('foo.ttf', '/path/to/source')
-        self.font_from_web = src.Source('http://example.com/foo.ttf', '/path/to/source')
-        self.font_from_web_frag = src.Source('http://example.com/foo.ttf#/bar.ttf', '/path/to/source')
-        self.font_from_web_query = src.Source('http://android.git.kernel.org/?p=platform/frameworks/base.git;a=blob_plain;f=data/fonts/MTLc3m.ttf', '/path/to/source')
+        self.font_from_web = src.Source('http://example.com/foo.ttf',
+                                        '/path/to/source')
+        self.font_from_web_frag = src.Source(
+            'http://example.com/foo.ttf#/bar.ttf', '/path/to/source')
+        self.font_from_web_query = src.Source(
+            ('http://android.git.kernel.org/?p=platform/frameworks/base.git'
+             ';a=blob_plain;f=data/fonts/MTLc3m.ttf'), '/path/to/source')
         self.fc_from_source = src.Source('foo.conf', '/path/to/source')
         self.archive_from_source = src.Source('foo.zip', '/path/to/source')
-        self.archive_from_web = src.Source('http://example.com/foo.zip', '/path/to/source')
-        self.archive_from_web_frag = src.Source('http://example.com/foo#/bar.zip', '/path/to/source')
+        self.archive_from_web = src.Source('http://example.com/foo.zip',
+                                           '/path/to/source')
+        self.archive_from_web_frag = src.Source(
+            'http://example.com/foo#/bar.zip', '/path/to/source')
 
     def test_name(self):
+        """Test for name."""
         self.assertEqual(self.license_from_source.name, 'LICENSE.txt')
         self.assertEqual(self.doc_from_source.name, 'README.txt')
         self.assertEqual(self.font_from_source.name, 'foo.ttf')
@@ -50,45 +62,75 @@ class TestSource(unittest.TestCase):
         self.assertEqual(self.archive_from_web_frag.name, 'bar.zip')
 
     def test_realname(self):
+        """Test for realname."""
         self.assertEqual(self.license_from_source.realname, 'LICENSE.txt')
         self.assertEqual(self.doc_from_source.realname, 'README.txt')
         self.assertEqual(self.font_from_source.realname, 'foo.ttf')
-        self.assertEqual(self.font_from_web.realname, 'http://example.com/foo.ttf')
-        self.assertEqual(self.font_from_web_frag.realname, 'http://example.com/foo.ttf#/bar.ttf')
-        self.assertEqual(self.font_from_web_query.realname, 'http://android.git.kernel.org/?p=platform/frameworks/base.git;a=blob_plain;f=data/fonts/MTLc3m.ttf')
+        self.assertEqual(self.font_from_web.realname,
+                         'http://example.com/foo.ttf')
+        self.assertEqual(self.font_from_web_frag.realname,
+                         'http://example.com/foo.ttf#/bar.ttf')
+        self.assertEqual(
+            self.font_from_web_query.realname,
+            ('http://android.git.kernel.org/?p=platform/frameworks/base.git'
+             ';a=blob_plain;f=data/fonts/MTLc3m.ttf'))
         self.assertEqual(self.fc_from_source.realname, 'foo.conf')
         self.assertEqual(self.archive_from_source.realname, 'foo.zip')
-        self.assertEqual(self.archive_from_web.realname, 'http://example.com/foo.zip')
-        self.assertEqual(self.archive_from_web_frag.realname, 'http://example.com/foo#/bar.zip')
+        self.assertEqual(self.archive_from_web.realname,
+                         'http://example.com/foo.zip')
+        self.assertEqual(self.archive_from_web_frag.realname,
+                         'http://example.com/foo#/bar.zip')
 
     def test_fullname(self):
-        self.assertEqual(self.license_from_source.fullname, '/path/to/source/LICENSE.txt')
-        self.assertEqual(self.doc_from_source.fullname, '/path/to/source/README.txt')
-        self.assertEqual(self.font_from_source.fullname, '/path/to/source/foo.ttf')
-        self.assertEqual(self.font_from_web.fullname, '/path/to/source/foo.ttf')
-        self.assertEqual(self.font_from_web_frag.fullname, '/path/to/source/bar.ttf')
-        self.assertEqual(self.font_from_web_query.fullname, '/path/to/source/MTLc3m.ttf')
-        self.assertEqual(self.fc_from_source.fullname, '/path/to/source/foo.conf')
-        self.assertEqual(self.archive_from_source.fullname, '/path/to/source/foo.zip')
-        self.assertEqual(self.archive_from_web.fullname, '/path/to/source/foo.zip')
-        self.assertEqual(self.archive_from_web_frag.fullname, '/path/to/source/bar.zip')
+        """Test for fullname."""
+        self.assertEqual(self.license_from_source.fullname,
+                         '/path/to/source/LICENSE.txt')
+        self.assertEqual(self.doc_from_source.fullname,
+                         '/path/to/source/README.txt')
+        self.assertEqual(self.font_from_source.fullname,
+                         '/path/to/source/foo.ttf')
+        self.assertEqual(self.font_from_web.fullname,
+                         '/path/to/source/foo.ttf')
+        self.assertEqual(self.font_from_web_frag.fullname,
+                         '/path/to/source/bar.ttf')
+        self.assertEqual(self.font_from_web_query.fullname,
+                         '/path/to/source/MTLc3m.ttf')
+        self.assertEqual(self.fc_from_source.fullname,
+                         '/path/to/source/foo.conf')
+        self.assertEqual(self.archive_from_source.fullname,
+                         '/path/to/source/foo.zip')
+        self.assertEqual(self.archive_from_web.fullname,
+                         '/path/to/source/foo.zip')
+        self.assertEqual(self.archive_from_web_frag.fullname,
+                         '/path/to/source/bar.zip')
+
 
 class TestFile(unittest.TestCase):
+    """Test case for File class."""
 
     def setUp(self):
-        self.license_from_source = src.File('LICENSE.txt', '/path/to/source', True)
+        """Initialize common variables."""
+        self.license_from_source = src.File('LICENSE.txt', '/path/to/source',
+                                            True)
         self.doc_from_source = src.File('README.txt', '/path/to/source', True)
         self.doc_from_archive = src.File('./README.md', '/tmp/foo', False)
-        self.doc_from_archive_sub = src.File('foo-1.0/README.md', '/tmp/foo', False)
+        self.doc_from_archive_sub = src.File('foo-1.0/README.md', '/tmp/foo',
+                                             False)
         self.font_from_source = src.File('foo.ttf', '/path/to/source', True)
-        self.font_from_web = src.File('http://example.com/baz/foo.ttf', '/path/to/source', True)
-        self.font_from_web_frag = src.File('http://example.com/foo.ttf#/bar.ttf', '/path/to/source', True)
-        self.font_from_web_query = src.File('http://android.git.kernel.org/?p=platform/frameworks/base.git;a=blob_plain;f=data/fonts/MTLc3m.ttf', '/path/to/source', True)
+        self.font_from_web = src.File('http://example.com/baz/foo.ttf',
+                                      '/path/to/source', True)
+        self.font_from_web_frag = src.File(
+            'http://example.com/foo.ttf#/bar.ttf', '/path/to/source', True)
+        self.font_from_web_query = src.File(
+            ('http://android.git.kernel.org/?p=platform/frameworks/base.git'
+             ';a=blob_plain;f=data/fonts/MTLc3m.ttf'), '/path/to/source', True)
         self.font_from_archive = src.File('ttf/foo.ttf', '/tmp/foo', False)
-        self.font_from_archive_sub = src.File('foo-1.0/ttf/foo.ttf', '/tmp/foo', False)
+        self.font_from_archive_sub = src.File('foo-1.0/ttf/foo.ttf',
+                                              '/tmp/foo', False)
         self.fc_from_source = src.File('foo.conf', '/path/to/source', True)
 
     def test_name(self):
+        """Test for name."""
         self.assertEqual(self.license_from_source.name, 'LICENSE.txt')
         self.assertEqual(self.doc_from_source.name, 'README.txt')
         self.assertEqual(self.doc_from_archive.name, 'README.md')
@@ -102,32 +144,52 @@ class TestFile(unittest.TestCase):
         self.assertEqual(self.fc_from_source.name, 'foo.conf')
 
     def test_realname(self):
+        """Test for realname."""
         self.assertEqual(self.license_from_source.realname, 'LICENSE.txt')
         self.assertEqual(self.doc_from_source.realname, 'README.txt')
         self.assertEqual(self.doc_from_archive.realname, './README.md')
-        self.assertEqual(self.doc_from_archive_sub.realname, 'foo-1.0/README.md')
+        self.assertEqual(self.doc_from_archive_sub.realname,
+                         'foo-1.0/README.md')
         self.assertEqual(self.font_from_source.realname, 'foo.ttf')
-        self.assertEqual(self.font_from_web.realname, 'http://example.com/baz/foo.ttf')
-        self.assertEqual(self.font_from_web_frag.realname, 'http://example.com/foo.ttf#/bar.ttf')
-        self.assertEqual(self.font_from_web_query.realname, 'http://android.git.kernel.org/?p=platform/frameworks/base.git;a=blob_plain;f=data/fonts/MTLc3m.ttf')
+        self.assertEqual(self.font_from_web.realname,
+                         'http://example.com/baz/foo.ttf')
+        self.assertEqual(self.font_from_web_frag.realname,
+                         'http://example.com/foo.ttf#/bar.ttf')
+        self.assertEqual(
+            self.font_from_web_query.realname,
+            ('http://android.git.kernel.org/?p=platform/frameworks/base.git'
+             ';a=blob_plain;f=data/fonts/MTLc3m.ttf'))
         self.assertEqual(self.font_from_archive.realname, 'ttf/foo.ttf')
-        self.assertEqual(self.font_from_archive_sub.realname, 'foo-1.0/ttf/foo.ttf')
+        self.assertEqual(self.font_from_archive_sub.realname,
+                         'foo-1.0/ttf/foo.ttf')
         self.assertEqual(self.fc_from_source.realname, 'foo.conf')
 
     def test_fullname(self):
-        self.assertEqual(self.license_from_source.fullname, '/path/to/source/LICENSE.txt')
-        self.assertEqual(self.doc_from_source.fullname, '/path/to/source/README.txt')
+        """Test for fullname."""
+        self.assertEqual(self.license_from_source.fullname,
+                         '/path/to/source/LICENSE.txt')
+        self.assertEqual(self.doc_from_source.fullname,
+                         '/path/to/source/README.txt')
         self.assertEqual(self.doc_from_archive.fullname, '/tmp/foo/README.md')
-        self.assertEqual(self.doc_from_archive_sub.fullname, '/tmp/foo/foo-1.0/README.md')
-        self.assertEqual(self.font_from_source.fullname, '/path/to/source/foo.ttf')
-        self.assertEqual(self.font_from_web.fullname, '/path/to/source/foo.ttf')
-        self.assertEqual(self.font_from_web_frag.fullname, '/path/to/source/bar.ttf')
-        self.assertEqual(self.font_from_web_query.fullname, '/path/to/source/MTLc3m.ttf')
-        self.assertEqual(self.font_from_archive.fullname, '/tmp/foo/ttf/foo.ttf')
-        self.assertEqual(self.font_from_archive_sub.fullname, '/tmp/foo/foo-1.0/ttf/foo.ttf')
-        self.assertEqual(self.fc_from_source.fullname, '/path/to/source/foo.conf')
+        self.assertEqual(self.doc_from_archive_sub.fullname,
+                         '/tmp/foo/foo-1.0/README.md')
+        self.assertEqual(self.font_from_source.fullname,
+                         '/path/to/source/foo.ttf')
+        self.assertEqual(self.font_from_web.fullname,
+                         '/path/to/source/foo.ttf')
+        self.assertEqual(self.font_from_web_frag.fullname,
+                         '/path/to/source/bar.ttf')
+        self.assertEqual(self.font_from_web_query.fullname,
+                         '/path/to/source/MTLc3m.ttf')
+        self.assertEqual(self.font_from_archive.fullname,
+                         '/tmp/foo/ttf/foo.ttf')
+        self.assertEqual(self.font_from_archive_sub.fullname,
+                         '/tmp/foo/foo-1.0/ttf/foo.ttf')
+        self.assertEqual(self.fc_from_source.fullname,
+                         '/path/to/source/foo.conf')
 
     def test_prefix(self):
+        """Test for prefix."""
         self.assertEqual(self.license_from_source.prefix, '/path/to/source')
         self.assertEqual(self.doc_from_source.prefix, '/path/to/source')
         self.assertEqual(self.doc_from_archive.prefix, '/tmp/foo')
@@ -141,6 +203,7 @@ class TestFile(unittest.TestCase):
         self.assertEqual(self.fc_from_source.prefix, '/path/to/source')
 
     def test_is_license(self):
+        """Test for is_license."""
         self.assertEqual(self.license_from_source.is_license(), True)
         self.assertEqual(self.doc_from_source.is_license(), False)
         self.assertEqual(self.doc_from_archive.is_license(), False)
@@ -154,6 +217,7 @@ class TestFile(unittest.TestCase):
         self.assertEqual(self.fc_from_source.is_license(), False)
 
     def test_is_doc(self):
+        """Test for is_doc."""
         self.assertEqual(self.license_from_source.is_doc(), True)
         self.assertEqual(self.doc_from_source.is_doc(), True)
         self.assertEqual(self.doc_from_archive.is_doc(), True)
@@ -167,6 +231,7 @@ class TestFile(unittest.TestCase):
         self.assertEqual(self.fc_from_source.is_doc(), False)
 
     def test_is_font(self):
+        """Test for is_font."""
         self.assertEqual(self.license_from_source.is_font(), False)
         self.assertEqual(self.doc_from_source.is_font(), False)
         self.assertEqual(self.doc_from_archive.is_font(), False)
@@ -180,6 +245,7 @@ class TestFile(unittest.TestCase):
         self.assertEqual(self.fc_from_source.is_font(), False)
 
     def test_is_fontconfig(self):
+        """Test for is_fontconfig."""
         self.assertEqual(self.license_from_source.is_fontconfig(), False)
         self.assertEqual(self.doc_from_source.is_fontconfig(), False)
         self.assertEqual(self.doc_from_archive.is_fontconfig(), False)
@@ -193,6 +259,7 @@ class TestFile(unittest.TestCase):
         self.assertEqual(self.fc_from_source.is_fontconfig(), True)
 
     def test_is_source(self):
+        """Test for is_source."""
         self.assertEqual(self.license_from_source.is_source(), True)
         self.assertEqual(self.doc_from_source.is_source(), True)
         self.assertEqual(self.doc_from_archive.is_source(), False)
@@ -204,6 +271,7 @@ class TestFile(unittest.TestCase):
         self.assertEqual(self.font_from_archive.is_source(), False)
         self.assertEqual(self.font_from_archive_sub.is_source(), False)
         self.assertEqual(self.fc_from_source.is_source(), True)
+
 
 if __name__ == '__main__':
     unittest.main()
