@@ -30,8 +30,8 @@ try:
     import _debugpath  # noqa: F401
 except ModuleNotFoundError:
     pass
-from pyfontrpmspec import font_reader as fr
-from pyfontrpmspec.messages import Message as m
+from fontrpmspec import font_reader as fr
+from fontrpmspec.messages import Message as m
 from urllib.parse import urlparse
 from typing import Iterator, Any
 

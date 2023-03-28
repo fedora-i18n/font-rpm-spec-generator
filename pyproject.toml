@@ -38,8 +38,8 @@ dependencies = [
 "Bug Tracker" = "https://github.com/fedora-i18n/font-rpm-spec-generator/issues"
 
 [project.entry-points.console_scripts]
-"fontrpmspec-conv" = "pyfontrpmspec.converter:main"
-"fontrpmspec-gen" = "pyfontrpmspec.generator:main"
+"fontrpmspec-conv" = "fontrpmspec.converter:main"
+"fontrpmspec-gen" = "fontrpmspec.generator:main"
 
 [tool.setuptools]
 include-package-data = true
@@ -49,4 +49,4 @@ namespaces = true
 exclude = [ "tests" ]
 
 [tool.setuptools.package-data]
-"pyfontrpmspec.template" = [ "spectemplate-fonts-simple.spec", "spectemplate-fonts-multi.spec" ]
+"fontrpmspec.template" = [ "spectemplate-fonts-simple.spec", "spectemplate-fonts-multi.spec" ]

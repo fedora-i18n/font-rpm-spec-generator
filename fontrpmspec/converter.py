@@ -29,12 +29,12 @@ try:
     import _debugpath  # noqa: F401
 except ModuleNotFoundError:
     pass
-import pyfontrpmspec.errors as err
-from pyfontrpmspec import font_reader as fr
-from pyfontrpmspec.messages import Message as m
-from pyfontrpmspec import sources as src
-from pyfontrpmspec import template
-from pyfontrpmspec.package import Package
+import fontrpmspec.errors as err
+from fontrpmspec import font_reader as fr
+from fontrpmspec.messages import Message as m
+from fontrpmspec import sources as src
+from fontrpmspec import template
+from fontrpmspec.package import Package
 
 
 def validate_exdata(exdata):

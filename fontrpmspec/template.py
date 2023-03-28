@@ -26,9 +26,9 @@ from typing import Any
 def get(npkgs: int, data: dict[str, Any]) -> str:
     """Generate a spec file from template."""
     try:
-        ptempl = files('pyfontrpmspec.template').name()
+        ptempl = files('fontrpmspec.template').name()
     except TypeError:
-        ptempl = files('pyfontrpmspec').joinpath('template')
+        ptempl = files('fontrpmspec').joinpath('template')
     env = Environment(loader=FileSystemLoader(ptempl))
     template = {}
 

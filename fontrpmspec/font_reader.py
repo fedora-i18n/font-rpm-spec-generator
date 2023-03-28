@@ -26,7 +26,7 @@ try:
     import _debugpath  # noqa: F401
 except ModuleNotFoundError:
     pass
-from pyfontrpmspec.messages import Message as m
+from fontrpmspec.messages import Message as m
 
 NAME_TABLE = {
     0: 'CopyrightNotice',
