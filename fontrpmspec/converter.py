@@ -39,11 +39,11 @@ from fontrpmspec.package import Package
 
 def validate_exdata(exdata):
     """Validate exdata returned by sources.extract."""
-    if 'licenses' not in exdata:
+    if 'licenses' not in exdata or len(exdata['licenses']) == 0:
         raise TypeError(m().error('No license files detected'))
-    if 'fonts' not in exdata:
+    if 'fonts' not in exdata or len(exdata['fonts']) == 0:
         raise TypeError(m().error('No fonts files detected'))
-    if 'fontconfig' not in exdata:
+    if 'fontconfig' not in exdata or len(exdata['fontconfig']) == 0:
         raise TypeError(m().error('No fontconfig files detected'))
 
 
