@@ -279,12 +279,15 @@ class File:
     def is_appstream_file(self) -> bool:
         """Whether or not the targeted file is an appstream file."""
         if self.name.endswith('.xml'):
-            tree = etree.parse(self.fullname)
-            s = tree.xpath('/component[@type="font"]')
-            if not s:
+            try:
+                tree = etree.parse(self.fullname)
+                s = tree.xpath('/component[@type="font"]')
+                if not s:
+                    return False
+                else:
+                    return True
+            except etree.XMLSyntaxError:
                 return False
-            else:
-                return True
         else:
             return False
 
