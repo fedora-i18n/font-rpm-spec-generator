@@ -20,6 +20,7 @@
 
 import os
 import re
+import requests
 import shutil
 import subprocess
 import tempfile
@@ -32,7 +33,7 @@ except ModuleNotFoundError:
     pass
 from fontrpmspec import font_reader as fr
 from fontrpmspec.messages import Message as m
-from urllib.parse import urlparse
+from urllib.parse import urlparse, parse_qs
 from typing import Iterator, Any
 
 
@@ -312,8 +313,15 @@ class Source:
     def __iter__(self) -> Iterator[File]:
         """Implement iter(self) with `File`."""
         if not Path(self.fullname).exists():
-            raise FileNotFoundError(
-                m([': ']).info(self.name).error('file not found'))
+            if self.is_downloadable:
+                with requests.get(self.url, stream=True) as r:
+                    r.raise_for_status()
+                    with open(self.fullname, 'wb') as f:
+                        for chunk in r.iter_content(chunk_size=8192):
+                            f.write(chunk)
+            else:
+                raise FileNotFoundError(
+                    m([': ']).info(self.name).error('file not found'))
         self._tempdir = tempfile.TemporaryDirectory()
         try:
             shutil.unpack_archive(self.fullname, self._tempdir.name)
@@ -355,6 +363,18 @@ class Source:
         return self._sourcename
 
     @property
+    def url(self) -> str:
+        """Obtain URL without querystring"""
+        u = urlparse(self.realname, allow_fragments=True)
+        return u._replace(query=None).geturl()
+
+    @property
+    def querystring(self) -> str:
+        """Obtain QueryString"""
+        u = urlparse(self.realname, allow_fragments=True)
+        return parse_qs(u.query)
+
+    @property
     def fullname(self) -> str:
         """Obtain filename with fullpath."""
         u = urlparse(self.realname, allow_fragments=True)
@@ -371,6 +391,15 @@ class Source:
     def is_archive(self) -> bool:
         """Whether or not the targeted file is an archive file."""
         return self._is_archive
+
+    @property
+    def is_downloadable(self) -> bool:
+        """Whether a source is downloadable"""
+        u = urlparse(self.realname, allow_fragments=True)
+        if re.match(r'http.*', u.scheme):
+            return True
+        else:
+            return False
 
 
 class Sources:
