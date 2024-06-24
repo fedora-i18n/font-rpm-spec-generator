@@ -107,6 +107,7 @@ class File:
         self._filename = fn
         self._prefixdir = prefixdir
         self.__families = None
+        self.__aliases = None
         self.__is_source = is_source
 
     def __name(self, name):
@@ -163,6 +164,15 @@ class File:
             return None
 
     @property
+    def alias(self) -> str | None:
+        """Obtain alias name if available. otherwise `None`."""
+        retval = self.aliases
+        if retval is not None:
+            return retval[0]
+        else:
+            return None
+
+    @property
     def families(self) -> list[str] | None:
         """Obtain the list of family names if available. otherwise `None`."""
         if self.is_fontconfig():
@@ -200,6 +210,41 @@ class File:
                 return self.__families
             else:
                 return self.__families
+        else:
+            return None
+
+    @property
+    def aliases(self) -> list[str] | None:
+        """Obtain the list of alias names if available. otherwise `None`."""
+        if self.is_fontconfig():
+            if self.__aliases is None:
+                tree = etree.parse(self.fullname)
+                alias_list = tree.xpath(
+                    '/fontconfig/alias/default/family/text()')
+                if not alias_list:
+                    alias_list = tree.xpath(
+                        ('/fontconfig/match[not(@target) or contains(@target, \'pattern\')]/test[@name=\'family\']'
+                         '/string/text()'))
+                    if not alias_list:
+                        raise ValueError(
+                            m([': ']).info(self.name).error(
+                                'Unable to guess the targeted alias name'))
+
+                alias_list.sort(key=lambda s: len(s))
+                if len(alias_list) > 1:
+                    basename = alias_list[0]
+                    error = []
+                    for f in alias_list[1:]:
+                        if not re.search(r'^{}'.format(basename), f):
+                            error.append(f)
+                    if len(error):
+                        m([': ']).info(self.name).warning(
+                            'Different alias names detected').message(
+                                error).out()
+                self.__aliases = alias_list
+                return self.__aliases
+            else:
+                return self.__aliases
         else:
             return None
 
@@ -296,7 +341,7 @@ class File:
 class Source:
     """A Class to deal with the source archive."""
 
-    def __init__(self, fn: str, sourcedir: str = None):
+    def __init__(self, fn: str, sourcedir: str = '.'):
         """Initialize `Source` with source file."""
         self.__sourcedir = sourcedir
         self._sourcename = fn
