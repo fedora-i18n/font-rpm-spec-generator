@@ -40,6 +40,7 @@ dependencies = [
 [project.entry-points.console_scripts]
 "fontrpmspec-conv" = "fontrpmspec.converter:main"
 "fontrpmspec-gen" = "fontrpmspec.generator:main"
+"fontrpmspec-gentmt" = "fontrpmspec.gentmt:main"
 
 [tool.setuptools]
 include-package-data = true
