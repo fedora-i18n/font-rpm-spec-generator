@@ -253,7 +253,7 @@ class File:
     def languages(self) -> list[str] | None:
         """Obtain the list of language names if available. otherwise `None`."""
         if self.is_fontconfig():
-            if self.__aliases is None:
+            if self.__langs is None:
                 tree = etree.parse(self.fullname)
                 lang_list = tree.xpath('/fontconfig/match/test[@name=\'lang\']/string/text()')
 
