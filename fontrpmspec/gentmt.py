@@ -4,6 +4,7 @@
 
 import argparse
 import glob
+import re
 import shutil
 import subprocess
 import sys
@@ -36,6 +37,12 @@ def main():
     if not shutil.which('fedpkg'):
         print('fedpkg is not installed')
         sys.exit(1)
+    if not shutil.which('rpm'):
+        print('rpm is not installed')
+        sys.exit(1)
+    if not shutil.which('fc-query'):
+        print('fc-query is not installed')
+        sys.exit(1)
 
     with tempfile.TemporaryDirectory() as tmpdir:
         cmd = ['fedpkg', 'local', '--define', '_rpmdir {}'.format(tmpdir)]
@@ -47,17 +54,28 @@ def main():
         for pkg in sorted((Path(tmpdir) / 'noarch').glob('*.rpm')):
             s = src.Source(str(pkg))
             has_fc_conf = False
+            has_lang = False
             flist = []
             alist = []
+            llist = []
             for f in s:
                 if f.is_fontconfig():
                     has_fc_conf = True
+                if f.is_font():
+                    ss = subprocess.run(['fc-query', '-f', '%{lang}\n', f.fullname], stdout=subprocess.PIPE)
+                    l = re.split(r'[,|]', ss.stdout.decode('utf-8'))
+                    has_lang = len(l) > 0
+                    if len(l) == 1:
+                        llist = l
                 if f.families is not None:
                     flist += f.families
                 if f.aliases is not None:
                     alist += f.aliases
+                if not llist and f.languages is not None:
+                    llist += f.langs
             flist = list(set(flist))
             alist = list(set(alist))
+            llist = list(set(llist))
             if len(flist) > 1 or len(alist) > 1:
                 m([': ']).info(str(pkg)).warning('Generated file may not be correct').out()
             ss = subprocess.run(['rpm', '-qp', '--qf', '%{name}', str(pkg)], stdout=subprocess.PIPE)
@@ -69,11 +87,19 @@ def main():
             with planfile.open(mode='w') as f:
                 if not has_fc_conf:
                     disabled = """
-                    exclude:
-                      - generic_alias
-                    """
+exclude:
+    - generic_alias
+"""
                 else:
                     disabled = ''
+                if not has_lang:
+                    if not disabled:
+                        disabled = """
+exclude:
+    - lang_coverage
+"""
+                    else:
+                        disabled += '    - lang_coverage\n'
                 f.write(f"""
 summary: Fonts related tests
 discover:
@@ -85,7 +111,7 @@ environment:
     PACKAGE: {pkgname}
     FONT_ALIAS: {alist[0]}
     FONT_FAMILY: {flist[0]}
-    FONT_LANG: __LANG__
+    FONT_LANG: {','.join(llist) or 'not detected'}
 """)
 
         print('Done. Update lang in the generated file(s) if needed')
