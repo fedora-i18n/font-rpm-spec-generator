@@ -47,7 +47,14 @@ def main():
     if not shutil.which('fc-query'):
         print('fc-query is not installed')
         sys.exit(1)
+    if not shutil.which('tmt'):
+        print('tmt is not installed')
+        sys.exit(1)
 
+    cmd = ['tmt', 'init']
+    if args.verbose:
+        print('# ' + ' '.join(cmd))
+    subprocess.run(cmd, cwd=args.REPO)
     with tempfile.TemporaryDirectory() as tmpdir:
         cmd = ['fedpkg', 'local', '--define', '_rpmdir {}'.format(tmpdir)]
         if args.extra_buildopts:
