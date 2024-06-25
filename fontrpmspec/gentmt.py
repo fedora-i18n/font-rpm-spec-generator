@@ -4,6 +4,7 @@
 
 import argparse
 import glob
+import os
 import re
 import shutil
 import subprocess
@@ -25,13 +26,16 @@ def main():
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     parser.add_argument('--extra-buildopts', help='Extra buildopts to build package')
+    parser.add_argument('-a', '--add-prepare',
+                        action='store_true', help='Add prepare section for local testing')
     parser.add_argument('-O', '--outputdir', help='Output directory')
     parser.add_argument('-v', '--verbose',
                         action='store_true', help='Show more detailed logs')
-    parser.add_argument('REPO', default='.', help='Package repository path')
+    parser.add_argument('REPO', help='Package repository path')
 
     args = parser.parse_args()
 
+    cwd = os.getcwd()
     if args.outputdir is None:
         args.outputdir = args.REPO
     if not shutil.which('fedpkg'):
@@ -72,40 +76,46 @@ def main():
                 if f.aliases is not None:
                     alist += f.aliases
                 if not llist and f.languages is not None:
-                    llist += f.langs
+                    llist += f.languages
             flist = list(set(flist))
             alist = list(set(alist))
             llist = list(set(llist))
             if len(flist) > 1 or len(alist) > 1:
                 m([': ']).info(str(pkg)).warning('Generated file may not be correct').out()
             ss = subprocess.run(['rpm', '-qp', '--qf', '%{name}', str(pkg)], stdout=subprocess.PIPE)
+            os.chdir(cwd)
             pkgname = ss.stdout.decode('utf-8')
             plandir = Path(args.outputdir) / 'plans'
-            plandir.mkdir(exist_ok = True)
+            plandir.mkdir(parents=True, exist_ok=True)
             planfile = plandir / (pkgname + '.fmf')
             m([': ']).info(str(planfile)).message('Generating...').out()
             with planfile.open(mode='w') as f:
                 if not has_fc_conf:
-                    disabled = """
-exclude:
+                    disabled = """exclude:
     - generic_alias
 """
                 else:
                     disabled = ''
                 if not has_lang:
                     if not disabled:
-                        disabled = """
-exclude:
+                        disabled = """exclude:
     - lang_coverage
 """
                     else:
                         disabled += '    - lang_coverage\n'
-                f.write(f"""
-summary: Fonts related tests
+                if args.add_prepare:
+                    prepare = f"""prepare:
+    name: tmt
+    how: install
+    package: {pkgname}
+"""
+                else:
+                    prepare = ''
+                f.write(f"""summary: Fonts related tests
 discover:
     how: fmf
     url: https://src.fedoraproject.org/tests/fonts
-{disabled}execute:
+{disabled}{prepare}execute:
     how: tmt
 environment:
     PACKAGE: {pkgname}
