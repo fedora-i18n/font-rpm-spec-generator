@@ -108,6 +108,7 @@ class File:
         self._prefixdir = prefixdir
         self.__families = None
         self.__aliases = None
+        self.__langs = None
         self.__is_source = is_source
 
     def __name(self, name):
@@ -248,6 +249,22 @@ class File:
         else:
             return None
 
+    @property
+    def languages(self) -> list[str] | None:
+        """Obtain the list of language names if available. otherwise `None`."""
+        if self.is_fontconfig():
+            if self.__aliases is None:
+                tree = etree.parse(self.fullname)
+                lang_list = tree.xpath('/fontconfig/match/test[@name=\'lang\']/string/text()')
+
+                lang_list.sort(key=lambda s: len(s))
+                self.__langs = lang_list
+                return self.__langs
+            else:
+                return self.__langs
+        else:
+            return None
+
     def is_license(self) -> bool:
         """Wheter or not the targeted file is a license file."""
         LICENSES = ['OFL', 'MIT', 'GPL']
@@ -268,8 +285,7 @@ class File:
 
     def is_font(self) -> bool:
         """Whether or not the targeted file is a font."""
-        if self.name.endswith('.otf') or self.name.endswith(
-                '.ttf') or self.name.endswith('.ttc'):
+        if self.name.endswith('.otf') or self.name.endswith('.otc') or self.name.endswith('.ttf') or self.name.endswith('.ttc'):
             return True
         else:
             return False
