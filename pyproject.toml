@@ -47,7 +47,6 @@ include-package-data = true
 
 [tool.setuptools.packages.find]
 namespaces = true
-exclude = [ "tests" ]
 
 [tool.setuptools.package-data]
 "fontrpmspec.template" = [ "spectemplate-fonts-simple.spec", "spectemplate-fonts-multi.spec" ]
