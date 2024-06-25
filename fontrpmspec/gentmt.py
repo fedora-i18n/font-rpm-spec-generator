@@ -20,6 +20,45 @@ from fontrpmspec.messages import Message as m
 from fontrpmspec import sources as src
 
 
+def generate_plan(planfile, has_fc_conf, has_lang, add_prepare, pkgname, alias, family, languages, warn):
+    if warn:
+        m([': ']).info(str(planfile)).warning('Generated file may not be correct').out()
+    m([': ']).info(str(planfile)).message('Generating...').out()
+    with planfile.open(mode='w') as f:
+        if not has_fc_conf:
+            disabled = """exclude:
+    - generic_alias
+"""
+        else:
+            disabled = ''
+        if not has_lang:
+            if not disabled:
+                disabled = """exclude:
+    - lang_coverage
+"""
+            else:
+                disabled += '    - lang_coverage\n'
+        if add_prepare:
+            prepare = f"""prepare:
+    name: tmt
+    how: install
+    package: {pkgname}
+"""
+        else:
+            prepare = ''
+        f.write(f"""summary: Fonts related tests
+discover:
+    how: fmf
+    url: https://src.fedoraproject.org/tests/fonts
+{disabled}{prepare}execute:
+    how: tmt
+environment:
+    PACKAGE: {pkgname}
+    FONT_ALIAS: {alias}
+    FONT_FAMILY: {family}
+    FONT_LANG: {','.join(languages) or 'not detected'}
+""")
+
 def main():
     """Endpoint function to generate tmt plans from RPM spec file"""
     parser = argparse.ArgumentParser(description='TMT plan generator',
@@ -66,6 +105,7 @@ def main():
             s = src.Source(str(pkg))
             has_fc_conf = False
             has_lang = False
+            is_ttc = False
             flist = []
             alist = []
             llist = []
@@ -84,52 +124,26 @@ def main():
                     alist += f.aliases
                 if not llist and f.languages is not None:
                     llist += f.languages
-            flist = list(set(flist))
-            alist = list(set(alist))
-            llist = list(set(llist))
-            if len(flist) > 1 or len(alist) > 1:
-                m([': ']).info(str(pkg)).warning('Generated file may not be correct').out()
+                if f.is_fontcollection():
+                    is_ttc = True
+            flist = list(dict.fromkeys(flist))
+            print(flist)
+            alist = list(dict.fromkeys(alist))
+            llist = list(dict.fromkeys(llist))
             ss = subprocess.run(['rpm', '-qp', '--qf', '%{name}', str(pkg)], stdout=subprocess.PIPE)
             os.chdir(cwd)
             pkgname = ss.stdout.decode('utf-8')
             plandir = Path(args.outputdir) / 'plans'
             plandir.mkdir(parents=True, exist_ok=True)
             planfile = plandir / (pkgname + '.fmf')
-            m([': ']).info(str(planfile)).message('Generating...').out()
-            with planfile.open(mode='w') as f:
-                if not has_fc_conf:
-                    disabled = """exclude:
-    - generic_alias
-"""
-                else:
-                    disabled = ''
-                if not has_lang:
-                    if not disabled:
-                        disabled = """exclude:
-    - lang_coverage
-"""
-                    else:
-                        disabled += '    - lang_coverage\n'
-                if args.add_prepare:
-                    prepare = f"""prepare:
-    name: tmt
-    how: install
-    package: {pkgname}
-"""
-                else:
-                    prepare = ''
-                f.write(f"""summary: Fonts related tests
-discover:
-    how: fmf
-    url: https://src.fedoraproject.org/tests/fonts
-{disabled}{prepare}execute:
-    how: tmt
-environment:
-    PACKAGE: {pkgname}
-    FONT_ALIAS: {alist[0]}
-    FONT_FAMILY: {flist[0]}
-    FONT_LANG: {','.join(llist) or 'not detected'}
-""")
+            if is_ttc:
+                for fn in flist:
+                    sub = fn.replace(flist[0], '').strip().lower()
+                    name = pkgname + '.fmf' if not sub else pkgname + '_' + sub + '.fmf'
+                    planfile = plandir / name
+                    generate_plan(planfile, has_fc_conf, has_lang, args.add_prepare, pkgname, alist[0], fn, llist, len(flist) > 1 or len(alist) > 1)
+            else:
+                generate_plan(planfile, has_fc_conf, has_lang, args.add_prepare, pkgname, alist[0], flist[0], llist, len(flist) > 1 or len(alist) > 1)
 
         print('Done. Update lang in the generated file(s) if needed')
 

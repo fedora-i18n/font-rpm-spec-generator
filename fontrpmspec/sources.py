@@ -290,6 +290,13 @@ class File:
         else:
             return False
 
+    def is_fontcollection(self) -> bool:
+        """Whether or not the targeted file is a font."""
+        if self.name.endswith('.otc') or self.name.endswith('.ttc'):
+            return True
+        else:
+            return False
+
     def is_vf(self) -> bool:
         """Whether or not the target font file is a variable font."""
         if not self.is_font():
