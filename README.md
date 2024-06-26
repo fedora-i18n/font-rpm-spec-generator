@@ -77,4 +77,25 @@ Note:
 - You may need to update `BuildRequires` section as per your font requiremnts in your spec.
 - Also update the `%build` section if your font uses some other build process.
 
+### fontrpmspec-gentmt
+```
+usage: fontrpmspec-gentmt [-h] [--extra-buildopts EXTRA_BUILDOPTS] [-a] [-O OUTPUTDIR]
+                          [-v]
+                          REPO
+
+TMT plan generator
+
+positional arguments:
+  REPO                  Package repository path
+
+options:
+  -h, --help            show this help message and exit
+  --extra-buildopts EXTRA_BUILDOPTS
+                        Extra buildopts to build package (default: None)
+  -a, --add-prepare     Add prepare section for local testing (default: False)
+  -O, --outputdir OUTPUTDIR
+                        Output directory (default: None)
+  -v, --verbose         Show more detailed logs (default: False)
+```
+
 Happy Packaging :)
