@@ -227,9 +227,7 @@ class File:
                         ('/fontconfig/match[not(@target) or contains(@target, \'pattern\')]/test[@name=\'family\']'
                          '/string/text()'))
                     if not alias_list:
-                        raise ValueError(
-                            m([': ']).info(self.name).error(
-                                'Unable to guess the targeted alias name'))
+                        return None
 
                 alias_list.sort(key=lambda s: len(s))
                 if len(alias_list) > 1:

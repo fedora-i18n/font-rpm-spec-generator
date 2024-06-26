@@ -105,6 +105,7 @@ def main():
             s = src.Source(str(pkg))
             has_fc_conf = False
             has_lang = False
+            has_fonts = False
             is_ttc = False
             flist = []
             alist = []
@@ -113,6 +114,7 @@ def main():
                 if f.is_fontconfig():
                     has_fc_conf = True
                 if f.is_font():
+                    has_fonts = True
                     ss = subprocess.run(['fc-query', '-f', '%{lang}\n', f.fullname], stdout=subprocess.PIPE)
                     l = re.split(r'[,|]', ss.stdout.decode('utf-8'))
                     has_lang = len(l) > 0
@@ -133,6 +135,9 @@ def main():
             ss = subprocess.run(['rpm', '-qp', '--qf', '%{name}', str(pkg)], stdout=subprocess.PIPE)
             os.chdir(cwd)
             pkgname = ss.stdout.decode('utf-8')
+            if not has_fonts:
+                m([': ']).info(pkgname).message('Skipping. No tmt plan is needed.').out()
+                continue
             plandir = Path(args.outputdir) / 'plans'
             plandir.mkdir(parents=True, exist_ok=True)
             planfile = plandir / (pkgname + '.fmf')
@@ -141,9 +146,9 @@ def main():
                     sub = fn.replace(flist[0], '').strip().lower()
                     name = pkgname + '.fmf' if not sub else pkgname + '_' + sub + '.fmf'
                     planfile = plandir / name
-                    generate_plan(planfile, has_fc_conf, has_lang, args.add_prepare, pkgname, alist[0], fn, llist, len(flist) > 1 or len(alist) > 1)
+                    generate_plan(planfile, has_fc_conf, has_lang, args.add_prepare, pkgname, alist[0] if len(alist) > 0 else None, fn, llist, len(flist) > 1 or len(alist) > 1)
             else:
-                generate_plan(planfile, has_fc_conf, has_lang, args.add_prepare, pkgname, alist[0], flist[0], llist, len(flist) > 1 or len(alist) > 1)
+                generate_plan(planfile, has_fc_conf, has_lang, args.add_prepare, pkgname, alist[0] if len(alist) > 0 else None, flist[0] if len(flist) > 0 else None, llist, len(flist) > 1 or len(alist) > 1)
 
         print('Done. Update lang in the generated file(s) if needed')
 
