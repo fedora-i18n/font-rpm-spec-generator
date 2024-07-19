@@ -196,6 +196,7 @@ class File:
                             family_list.append(v)
 
                 family_list = list(set(family_list))
+                family_list = [s.strip() for s in family_list]
                 family_list.sort(key=lambda s: len(s))
                 if len(family_list) > 1:
                     basename = family_list[0]
@@ -229,6 +230,7 @@ class File:
                     if not alias_list:
                         return None
 
+                alias_list = [s.strip() for s in alias_list]
                 alias_list.sort(key=lambda s: len(s))
                 if len(alias_list) > 1:
                     basename = alias_list[0]
@@ -255,6 +257,7 @@ class File:
                 tree = etree.parse(self.fullname)
                 lang_list = tree.xpath('/fontconfig/match/test[@name=\'lang\']/string/text()')
 
+                lang_list = [s.strip() for s in lang_list]
                 lang_list.sort(key=lambda s: len(s))
                 self.__langs = lang_list
                 return self.__langs
