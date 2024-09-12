@@ -3,7 +3,6 @@
 """Module to generate a test case based on tmt"""
 
 import argparse
-import glob
 import os
 import re
 import shutil
@@ -15,37 +14,54 @@ try:
     import _debugpath  # noqa: F401
 except ModuleNotFoundError:
     pass
-import fontrpmspec.errors as err
 from fontrpmspec.messages import Message as m
 from fontrpmspec import sources as src
 
 
-def generate_plan(planfile, has_fc_conf, has_lang, add_prepare, pkgname, alias, family, languages, warn):
+def generate_listdata(pkgname, alias, family, languages):
+    return f'{pkgname};{alias};{",".join(languages)};normal;{family};0;0;0;0;0;;;'
+
+
+def generate_plan(planfile, has_fc_conf, has_lang, add_prepare, pkgname,
+                  alias, family, languages, warn, is_single_plan, pkglist):
     if warn:
         m([': ']).info(str(planfile)).warning('Generated file may not be correct').out()
     m([': ']).info(str(planfile)).message('Generating...').out()
     with planfile.open(mode='w') as f:
         if not has_fc_conf:
-            disabled = """exclude:
-    - generic_alias
+            disabled = """    exclude:
+        - generic_alias
 """
         else:
             disabled = ''
         if not has_lang:
             if not disabled:
-                disabled = """exclude:
-    - lang_coverage
+                disabled = """    exclude:
+        - lang_coverage
+        - default_fonts
 """
             else:
-                disabled += '    - lang_coverage\n'
+                disabled += '        - lang_coverage\n        - default_fonts\n'
         if add_prepare:
+            if is_single_plan:
+                tmpl_pkg = '\n' + '\n'.join([f'        - {s}' for s in pkglist])
+            else:
+                tmpl_pkg = pkgname
             prepare = f"""prepare:
     name: tmt
     how: install
-    package: {pkgname}
+    package: {tmpl_pkg}
 """
         else:
             prepare = ''
+        lang = f"    FONT_LANG: {','.join(languages)}" if len(languages) > 0 else ''
+        if is_single_plan:
+            environment = f'    VARLIST: {pkgname}.list'
+        else:
+            environment = f"""    PACKAGE: {pkgname}
+    FONT_ALIAS: {alias}
+    FONT_FAMILY: {family}
+{lang}"""
         f.write(f"""summary: Fonts related tests
 discover:
     how: fmf
@@ -53,20 +69,22 @@ discover:
 {disabled}{prepare}execute:
     how: tmt
 environment:
-    PACKAGE: {pkgname}
-    FONT_ALIAS: {alias}
-    FONT_FAMILY: {family}
-    FONT_LANG: {','.join(languages) or 'not detected'}
-""")
+{environment}""")
+
 
 def main():
     """Endpoint function to generate tmt plans from RPM spec file"""
     parser = argparse.ArgumentParser(description='TMT plan generator',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-    parser.add_argument('--extra-buildopts', help='Extra buildopts to build package')
+    parser.add_argument('--extra-buildopts',
+                        help='Extra buildopts to build package')
     parser.add_argument('-a', '--add-prepare',
-                        action='store_true', help='Add prepare section for local testing')
+                        action='store_true',
+                        help='Add prepare section for local testing')
+    parser.add_argument('-s', '--single-plan',
+                        action='store_true',
+                        help='Generate single plan with list file')
     parser.add_argument('-O', '--outputdir', help='Output directory')
     parser.add_argument('-v', '--verbose',
                         action='store_true', help='Show more detailed logs')
@@ -101,6 +119,12 @@ def main():
         if args.verbose:
             print('# ' + ' '.join(cmd))
         subprocess.run(cmd, cwd=args.REPO)
+
+        plandir = Path(args.outputdir) / 'plans'
+        plandir.mkdir(parents=True, exist_ok=True)
+        listdata = []
+        pkglist = []
+
         for pkg in sorted((Path(tmpdir) / 'noarch').glob('*.rpm')):
             s = src.Source(str(pkg))
             has_fc_conf = False
@@ -110,18 +134,28 @@ def main():
             flist = []
             alist = []
             llist = []
+            pfamily = None
             for f in s:
                 if f.is_fontconfig():
                     has_fc_conf = True
                 if f.is_font():
                     has_fonts = True
-                    ss = subprocess.run(['fc-query', '-f', '%{lang}\n', f.fullname], stdout=subprocess.PIPE)
-                    l = re.split(r'[,|]', ss.stdout.decode('utf-8'))
-                    has_lang = len(l) > 0
-                    if len(l) == 1:
-                        llist = l
-                if f.families is not None:
-                    flist += f.families
+                    ss = subprocess.run(['fc-query', '-f', '%{lang}\n', f.fullname],
+                                        stdout=subprocess.PIPE)
+                    ll = list(filter(None, re.split(r'[,|\n]',
+                                                    ss.stdout.decode('utf-8'))))
+                    has_lang = has_lang or len(ll) > 0
+                    if len(ll) == 1:
+                        llist = ll
+                    ss = subprocess.run(['fc-scan', '-f', '%{family[0]}\n', f.fullname],
+                                        stdout=subprocess.PIPE)
+                    pfamily = ss.stdout.decode('utf-8').splitlines()[0]
+                try:
+                    if f.families is not None:
+                        flist += f.families
+                except ValueError:
+                    flist = [pfamily]
+                    has_fc_conf = False
                 if f.aliases is not None:
                     alist += f.aliases
                 if not llist and f.languages is not None:
@@ -132,25 +166,64 @@ def main():
             print(flist)
             alist = list(dict.fromkeys(alist))
             llist = list(dict.fromkeys(llist))
-            ss = subprocess.run(['rpm', '-qp', '--qf', '%{name}', str(pkg)], stdout=subprocess.PIPE)
+            ss = subprocess.run(['rpm', '-qp', '--qf', '%{name}', str(pkg)],
+                                stdout=subprocess.PIPE)
             os.chdir(cwd)
             pkgname = ss.stdout.decode('utf-8')
             if not has_fonts:
                 m([': ']).info(pkgname).message('Skipping. No tmt plan is needed.').out()
                 continue
-            plandir = Path(args.outputdir) / 'plans'
-            plandir.mkdir(parents=True, exist_ok=True)
             planfile = plandir / (pkgname + '.fmf')
             if is_ttc:
                 for fn in flist:
                     sub = fn.replace(flist[0], '').strip().lower()
                     name = pkgname + '.fmf' if not sub else pkgname + '_' + sub + '.fmf'
                     planfile = plandir / name
-                    generate_plan(planfile, has_fc_conf, has_lang, args.add_prepare, pkgname, alist[0] if len(alist) > 0 else None, fn, llist, len(flist) > 1 or len(alist) > 1)
+                    if args.single_plan:
+                        listdata.append(generate_listdata(pkgname,
+                                                          alist[0] if len(alist) > 0 else None,
+                                                          fn, llist))
+                        pkglist.append(pkgname)
+                    else:
+                        generate_plan(planfile, has_fc_conf, has_lang,
+                                      args.add_prepare, pkgname,
+                                      alist[0] if len(alist) > 0 else None,
+                                      fn, llist,
+                                      len(flist) > 1 or len(alist) > 1,
+                                      args.single_plan, [])
             else:
-                generate_plan(planfile, has_fc_conf, has_lang, args.add_prepare, pkgname, alist[0] if len(alist) > 0 else None, flist[0] if len(flist) > 0 else None, llist, len(flist) > 1 or len(alist) > 1)
+                if args.single_plan:
+                    listdata.append(generate_listdata(pkgname,
+                                                      alist[0] if len(alist) > 0 else None,
+                                                      flist[0] if len(flist) > 0 else None,
+                                                      llist))
+                    pkglist.append(pkgname)
+                else:
+                    generate_plan(planfile, has_fc_conf, has_lang,
+                                  args.add_prepare, pkgname,
+                                  alist[0] if len(alist) > 0 else None,
+                                  flist[0] if len(flist) > 0 else None,
+                                  llist,
+                                  len(flist) > 1 or len(alist) > 1,
+                                  args.single_plan, [])
+
+        if args.single_plan:
+            specfile = list(Path(args.REPO).glob('*.spec'))[0]
+            pkgname = str(specfile.with_suffix(''))
+            planfile = plandir / specfile.with_suffix('.fmf')
+            listfile = plandir / (pkgname + '.list')
+            with listfile.open(mode='w') as fl:
+                fl.write('# PACKAGE;FONT_ALIAS;FONT_LANG;FONT_WIDTH;'
+                         'FONT_FAMILY;DEFAULT_SANS;DEFAULT_SERIF;DEFAULT_MONO;'
+                         'DEFAULT_EMOJI;DEFAULT_MATH;FONT_LANG_EXCLUDE_FILES;'
+                         'FONT_VALIDATE_EXCLUDE_FILES;\n')
+                for ld in listdata:
+                    fl.write(ld + '\n')
+            generate_plan(planfile, True, True, args.add_prepare, pkgname,
+                          None, None, [], False, True, pkglist)
 
         print('Done. Update lang in the generated file(s) if needed')
+
 
 if __name__ == '__main__':
     main()
