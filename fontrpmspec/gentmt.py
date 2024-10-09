@@ -44,7 +44,7 @@ def generate_plan(planfile, has_fc_conf, has_lang, add_prepare, pkgname,
                 disabled += '        - lang_coverage\n        - default_fonts\n'
         if add_prepare:
             if is_single_plan:
-                tmpl_pkg = '\n' + '\n'.join([f'        - {s}' for s in pkglist])
+                tmpl_pkg = '\n' + '\n'.join([f'        - {s}' for s in list(set(pkglist))])
             else:
                 tmpl_pkg = pkgname
             prepare = f"""prepare:
