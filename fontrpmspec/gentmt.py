@@ -154,7 +154,8 @@ def main():
                     if f.families is not None:
                         flist += f.families
                 except ValueError:
-                    flist = [pfamily]
+                    if pfamily is not None:
+                        flist += [pfamily]
                     has_fc_conf = False
                 if f.aliases is not None:
                     alist += f.aliases
