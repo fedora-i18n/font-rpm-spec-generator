@@ -230,7 +230,7 @@ class File:
                     if not alias_list:
                         return None
 
-                alias_list = [s.strip() for s in alias_list]
+                alias_list = list(set([s.strip() for s in alias_list]))
                 alias_list.sort(key=lambda s: len(s))
                 if len(alias_list) > 1:
                     basename = alias_list[0]
