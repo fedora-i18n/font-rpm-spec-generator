@@ -19,7 +19,7 @@ from fontrpmspec import sources as src
 
 
 def generate_listdata(pkgname, alias, family, languages):
-    return f'{pkgname};{alias};{",".join(languages)};normal;{family};0;0;0;0;0;;;'
+    return f'{pkgname};{alias};{",".join(languages)};normal;{family};0;0;0;0;0;;;;;'
 
 
 def generate_plan(planfile, has_fc_conf, has_lang, add_prepare, pkgname,
@@ -217,7 +217,7 @@ def main():
                 fl.write('# PACKAGE;FONT_ALIAS;FONT_LANG;FONT_WIDTH;'
                          'FONT_FAMILY;DEFAULT_SANS;DEFAULT_SERIF;DEFAULT_MONO;'
                          'DEFAULT_EMOJI;DEFAULT_MATH;FONT_LANG_EXCLUDE_FILES;'
-                         'FONT_VALIDATE_EXCLUDE_FILES;\n')
+                         'FONT_VALIDATE_EXCLUDE_FILES;FONT_CONF_EXCLUDE_FILES;FONT_VALIDATE_INDEXES;\n')
                 for ld in listdata:
                     fl.write(ld + '\n')
             generate_plan(planfile, True, True, args.add_prepare, pkgname,
