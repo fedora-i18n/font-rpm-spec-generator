@@ -23,7 +23,8 @@ def generate_listdata(pkgname, alias, family, languages):
 
 
 def generate_plan(planfile, has_fc_conf, has_lang, add_prepare, pkgname,
-                  alias, family, languages, warn, is_single_plan, pkglist):
+                  alias, family, languages, warn, is_single_plan, pkglist,
+                  is_local):
     if warn:
         m([': ']).info(str(planfile)).warning('Generated file may not be correct').out()
     m([': ']).info(str(planfile)).message('Generating...').out()
@@ -44,19 +45,22 @@ def generate_plan(planfile, has_fc_conf, has_lang, add_prepare, pkgname,
                 disabled += '        - lang_coverage\n        - default_fonts\n'
         if add_prepare:
             if is_single_plan:
-                tmpl_pkg = '\n' + '\n'.join([f'        - {s}' for s in list(set(pkglist))])
+                if is_local:
+                    tmpl_pkg = f'{planfile.parents[1].absolute() / 'noarch'}'
+                else:
+                    tmpl_pkg = '\n' + '\n'.join([f'        - {s}' for s in list(set(pkglist))])
             else:
                 tmpl_pkg = pkgname
             prepare = f"""prepare:
     name: tmt
     how: install
-    package: {tmpl_pkg}
+    {"directory" if is_local else "package"}: {tmpl_pkg}
 """
         else:
             prepare = ''
         lang = f"    FONT_LANG: {','.join(languages)}" if len(languages) > 0 else ''
         if is_single_plan:
-            environment = f'    VARLIST: {pkgname}.list'
+            environment = f'    VARLIST: {"local" if is_local else pkgname}.list'
         else:
             environment = f"""    PACKAGE: {pkgname}
     FONT_ALIAS: {alias}
@@ -82,6 +86,12 @@ def main():
     parser.add_argument('-a', '--add-prepare',
                         action='store_true',
                         help='Add prepare section for local testing')
+    parser.add_argument('-l', '--local', metavar='FILE',
+                        help='Generate a fmf file for local testing. '
+                        '`fedpkg local` must be run before `tmt run`',
+                        nargs='?',
+                        const='local.fmf',
+                        default=False)
     parser.add_argument('-s', '--single-plan',
                         action='store_true',
                         help='Generate single plan with list file')
@@ -96,28 +106,36 @@ def main():
     if args.outputdir is None:
         args.outputdir = args.REPO
     if not shutil.which('fedpkg'):
-        print('fedpkg is not installed')
+        m([': ', '']).error('E').message('fedpkg is not installed').out()
         sys.exit(1)
     if not shutil.which('rpm'):
-        print('rpm is not installed')
+        m([': ', '']).error('E').message('rpm is not installed').out()
         sys.exit(1)
     if not shutil.which('fc-query'):
-        print('fc-query is not installed')
+        m([': ', '']).error('E').message('fc-query is not installed').out()
         sys.exit(1)
     if not shutil.which('tmt'):
-        print('tmt is not installed')
+        m([': ', '']).error('E').message('tmt is not installed').out()
         sys.exit(1)
 
+    if args.local and not args.single_plan:
+        m([': ', '']).warning('W').message('--local option expects to work'
+                                           ' with --single-plan.').out()
+        args.single_plan = True
+    if args.local and not args.add_prepare:
+        m([': ', '']).warning('W').message('--local option expects to work'
+                                           ' with --add-prepare.').out()
+        args.add_prepare = True
     cmd = ['tmt', 'init']
     if args.verbose:
-        print('# ' + ' '.join(cmd))
+        m([' ']).info('#').message(' '.join(cmd)).out()
     subprocess.run(cmd, cwd=args.REPO)
     with tempfile.TemporaryDirectory() as tmpdir:
         cmd = ['fedpkg', 'local', '--define', '_rpmdir {}'.format(tmpdir)]
         if args.extra_buildopts:
             cmd.insert(1, args.extra_buildopts)
         if args.verbose:
-            print('# ' + ' '.join(cmd))
+            m([' ']).info('#').message(' '.join(cmd)).out()
         subprocess.run(cmd, cwd=args.REPO)
 
         plandir = Path(args.outputdir) / 'plans'
@@ -191,7 +209,7 @@ def main():
                                       alist[0] if len(alist) > 0 else None,
                                       fn, llist,
                                       len(flist) > 1 or len(alist) > 1,
-                                      args.single_plan, [])
+                                      args.single_plan, [], False)
             else:
                 if args.single_plan:
                     listdata.append(generate_listdata(pkgname,
@@ -206,22 +224,28 @@ def main():
                                   flist[0] if len(flist) > 0 else None,
                                   llist,
                                   len(flist) > 1 or len(alist) > 1,
-                                  args.single_plan, [])
+                                  args.single_plan, [], False)
 
         if args.single_plan:
-            specfile = list(Path(args.REPO).glob('*.spec'))[0]
-            pkgname = str(specfile.with_suffix(''))
-            planfile = plandir / specfile.with_suffix('.fmf')
-            listfile = plandir / (pkgname + '.list')
+            if not args.local:
+                specfile = list(Path(args.REPO).glob('*.spec'))[0]
+                pkgname = str(specfile.with_suffix(''))
+                planfile = plandir / specfile.with_suffix('.fmf')
+                listfile = plandir / (pkgname + '.list')
+            else:
+                planfile = plandir / 'local.fmf'
+                listfile = plandir / 'local.list'
             with listfile.open(mode='w') as fl:
                 fl.write('# PACKAGE;FONT_ALIAS;FONT_LANG;FONT_WIDTH;'
                          'FONT_FAMILY;DEFAULT_SANS;DEFAULT_SERIF;DEFAULT_MONO;'
                          'DEFAULT_EMOJI;DEFAULT_MATH;FONT_LANG_EXCLUDE_FILES;'
-                         'FONT_VALIDATE_EXCLUDE_FILES;FONT_CONF_EXCLUDE_FILES;FONT_VALIDATE_INDEXES;\n')
+                         'FONT_VALIDATE_EXCLUDE_FILES;FONT_CONF_EXCLUDE_FILES;'
+                         'FONT_VALIDATE_INDEXES;\n')
                 for ld in listdata:
                     fl.write(ld + '\n')
             generate_plan(planfile, True, True, args.add_prepare, pkgname,
-                          None, None, [], False, True, pkglist)
+                          None, None, [], False, True, pkglist,
+                          not not args.local)
 
         print('Done. Update lang in the generated file(s) if needed')
 
