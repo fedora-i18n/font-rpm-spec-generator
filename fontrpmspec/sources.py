@@ -23,6 +23,7 @@ import re
 import requests
 import shutil
 import subprocess
+import sys
 import tempfile
 import zipfile
 from lxml import etree
@@ -145,10 +146,13 @@ class File:
     def fullname(self) -> str:
         """Obtain filename with fullpath."""
         u = urlparse(self.realname, allow_fragments=True)
-        if not u.scheme:
-            return str(Path(self.prefix) / self.realname)
-        else:
-            return str(Path(self.prefix) / self.name)
+        f = Path(self.prefix) / (self.realname if not u.scheme else self.name)
+        if f.is_symlink():
+            sym = f.readlink()
+            if not sym.is_relative_to(self.prefix):
+                # Symlink may points to the absolute path.
+                f = Path(self.prefix) / sym.relative_to('/')
+        return f
 
     @property
     def prefix(self):
@@ -447,10 +451,13 @@ class Source:
     def fullname(self) -> str:
         """Obtain filename with fullpath."""
         u = urlparse(self.realname, allow_fragments=True)
-        if not u.scheme:
-            return str(Path(self.__sourcedir) / self.realname)
-        else:
-            return str(Path(self.__sourcedir) / self.name)
+        f = Path(self.__sourcedir) / (self.realname if not u.scheme else self.name)
+        if f.is_symlink():
+            sym = f.readlink()
+            if not sym.is_relative_to(self.__sourcedir):
+                # Symlink may points to the absolute path.
+                f = Path(self.__sourcedir) / sym.relative_to('/')
+        return f
 
     @property
     def root(self) -> str:
