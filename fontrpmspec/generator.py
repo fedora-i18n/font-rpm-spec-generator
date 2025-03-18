@@ -526,7 +526,8 @@ def main():
         f.path = args.outputdir
         f.write()
     args.output.write(templates['spec'])
-    args.output.close()
+    if args.output != sys.stdout:
+        args.output.close()
     print('\n', flush=True, file=sys.stderr)
     if args.output.name != '<stdout>':
         r = Package.source_name(args.output.name)
