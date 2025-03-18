@@ -175,8 +175,8 @@ def generate(name: str, sources: str | list[str], url: str,
         exdata['setup'] = '-n {}'.format(exdata['root'])
 
     data = {}
-    families = []
-    fontconfig = []
+    families = [None]
+    fontconfig = [None]
     foundry = exdata['foundry'] if kwargs['foundry'] is None else kwargs[
         'foundry']
     for k, v in OrderedDict(sorted(fr.group(
@@ -190,28 +190,21 @@ def generate(name: str, sources: str | list[str], url: str,
         pkgheader = [] if k not in kwargs['pkgheader'] else kwargs[
             'pkgheader'][k]
         info = {
-            'family':
-            k,
+            'family': v[0]['fontinfo']['family'],
             'summary':
-            kwargs['summary'].format(family=k,
+            kwargs['summary'].format(family=v[0]['fontinfo']['family'],
                                      alias=kwargs['alias'],
                                      type=v[0]['fontinfo']['type']),
-            'fonts':
-            ' '.join([vv['file'] for vv in v]),
-            'exfonts':
-            '%{nil}',
-            'conf':
-            len(families) + 10,
-            'exconf':
-            '%{nil}',
+            'fonts': ' '.join([vv['file'] for vv in v]),
+            'exfonts': '%{nil}',
+            'conf': len(families) + 10,
+            'exconf': '%{nil}',
             'description':
-            kwargs['description'].format(family=k,
+            kwargs['description'].format(family=v[0]['fontinfo']['family'],
                                          alias=kwargs['alias'],
                                          type=v[0]['fontinfo']['type']),
-            'pkgheader':
-            '\n'.join(pkgheader)
+            'pkgheader': '\n'.join(pkgheader)
         }
-        families.append(info)
         c = FontconfigGenerator()
         for a in [vvv for vv in v for vvv in vv['fontinfo']['alias']]:
             c.add(a, v[0]['fontinfo']['family'], kwargs['lang'],
@@ -219,11 +212,15 @@ def generate(name: str, sources: str | list[str], url: str,
         c.set_fn(
             kwargs['priority']
             if not v[0]['fontinfo']['variable'] else kwargs['vf_priority'],
-            str(
-                FamilyString(foundry + ' ' + re.sub(r'^{}'.format(
-                    foundry), '', k)).normalize()) + '-fonts')
+            Package.build_package_name(foundry, v[0]['fontinfo']['family']))
         retval['fontconfig'].append(c)
-        fontconfig.append(c.get_fn())
+        pkgname = Package.build_package_name(foundry, info['family'])
+        if pkgname == kwargs['name']:
+            families[0] = info
+            fontconfig[0] = c.get_fn()
+        else:
+            families.append(info)
+            fontconfig.append(c.get_fn())
 
     source = kwargs['sources'][0] if urlparse(
         kwargs['sources'][0], allow_fragments=True).scheme else Path(
@@ -236,41 +233,27 @@ def generate(name: str, sources: str | list[str], url: str,
                     locale='en'), kwargs['username'], kwargs['email'], version,
         kwargs['changelog']) if not kwargs['rpmautospec'] else '%autochangelog'
     data = {
-        'version':
-        kwargs['version'],
-        'release':
-        release,
-        'url':
-        kwargs['url'],
+        'version': kwargs['version'],
+        'release': release,
+        'url': kwargs['url'],
         'extra_headers':
         '\n'.join(['{}: {}'.format(k, v) for k, v in extra_headers.items()]),
         'common_description':
         '\n'.join(textwrap.wrap(kwargs['common_description'])),
-        'source':
-        source,
-        'copy_source':
-        not exdata['archive'],
-        'exsources':
-        exdata['sources'],
-        'nsources':
-        exdata['nsources'],
-        'license':
-        kwargs['license'],
-        'license_file':
-        ' '.join([s.name for s in exdata['licenses']]),
+        'source': source,
+        'copy_source': not exdata['archive'],
+        'exsources': exdata['sources'],
+        'nsources': exdata['nsources'],
+        'license': kwargs['license'],
+        'license_file': ' '.join([s.name for s in exdata['licenses']]),
         'docs':
         ' '.join([s.name for s in exdata['docs']])
         if len(exdata['docs']) > 0 else '%{nil}',
-        'foundry':
-        foundry,
-        'fonts':
-        families,
-        'fontconfig':
-        fontconfig,
-        'setup':
-        exdata['setup'],
-        'changelog':
-        changelog,
+        'foundry': foundry,
+        'fonts': families,
+        'fontconfig': fontconfig,
+        'setup': exdata['setup'],
+        'changelog': changelog,
     }
     if len(families) == 1:
         data['family'] = families[0]['family']

@@ -17,6 +17,7 @@ Version: {{ version }}
 Release: {{ release }}
 URL:     {{ url }}
 BuildRequires: fonts-rpm-macros >= 1:2.0.5-9
+BuildArch: noarch
 {{ extra_headers }}
 
 # The following declarations will be aliased to [variable]0 and reused for all
@@ -37,6 +38,7 @@ BuildRequires: fonts-rpm-macros >= 1:2.0.5-9
 # source rpm info. All the [variable]0 declarations are equivalent and aliased
 # to [variable].
 {% for n in range(fonts| length) %}
+{% if fonts[n] is not none %}
 %global fontfamily{{ n }}       {{ fonts[n]['family'] }}
 %global fontsummary{{ n }}      {{ fonts[n]['summary'] }}
 %global fontpkgheader{{ n }}    %{expand:{{ fonts[n]['pkgheader'] }}
@@ -49,10 +51,11 @@ BuildRequires: fonts-rpm-macros >= 1:2.0.5-9
 %{common_description}
 {{ fonts[n]['description'] }}
 }
+{% endif %}
 {% endfor %}
 
-Source0:  {{ source }}{% for n in range(fonts| length) %}
-Source{{ n + 10 }}: {{ fontconfig[n] }}{% endfor %}{% for s in exsources %}
+Source0:  {{ source }}{% for n in range(fonts| length) %}{% if fonts[n] is not none %}
+Source{{ n + 10 }}: {{ fontconfig[n] }}{% endif %}{% endfor %}{% for s in exsources %}
 Source{{ nsources[s] }}: {{ s }}{% endfor %}{% set n = [0] %}{% for s in patches %}
 Patch{{ n[0] }}:   {{ s }}{% set _ = n.append(n[0] + 1) %}{% set _ = n.pop(0) %}{% endfor %}
 
