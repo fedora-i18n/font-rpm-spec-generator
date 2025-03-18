@@ -90,7 +90,7 @@ def font_meta_reader(fontfile: str, font_number: int = 0) -> dict[str, Any]:
         'type'] = 'OpenType' if font.sfntVersion == 'OTTO' else 'TrueType'
     fc = FontClass(fontfile, faceId=font_number)
     meta_data['alias'] = fc.get_alias_name()
-    meta_data['hashint'] = True if 'prep' in font or 'cvt' in font else False
+    meta_data['hashint'] = True if 'prep' in font or 'cvt' in font or 'fpgm' in font else False
     meta_data['variable'] = True if 'fvar' in font and 'gvar' in font else False
     return meta_data
 
