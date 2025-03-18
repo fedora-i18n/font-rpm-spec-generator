@@ -495,6 +495,7 @@ def main():
     if args.json_file:
         args = __load_config(args.json_file, args)
     if args.source is None or len(args.source) == 0:
+        m().error('No source files').out()
         parser.print_usage()
         sys.exit(1)
 
