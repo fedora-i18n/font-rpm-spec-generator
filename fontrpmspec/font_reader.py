@@ -88,7 +88,7 @@ def font_meta_reader(fontfile: str, font_number: int = 0) -> dict[str, Any]:
     meta_data['family'] = get_better_family(meta_data)
     meta_data[
         'type'] = 'OpenType' if font.sfntVersion == 'OTTO' else 'TrueType'
-    fc = FontClass(fontfile, faceId=font_number)
+    fc = FontClass(meta_data['family'], fontfile, faceId=font_number)
     meta_data['alias'] = fc.get_alias_name()
     meta_data['hashint'] = True if 'prep' in font or 'cvt' in font or 'fpgm' in font else False
     meta_data['variable'] = True if 'fvar' in font and 'gvar' in font else False
@@ -134,10 +134,11 @@ class FontClass:
     TYPE_MATH = 6
     TYPE_END = 7
 
-    def __init__(self, fn: str, faceId: int = -1):
+    def __init__(self, family: str, fn: str, faceId: int = -1):
         """Initialize `FontClass`."""
         self.file = fn
         self.index = faceId
+        self.family = family
 
     def __get_type_id(self, n):
         return 1 << n
@@ -179,17 +180,29 @@ class FontClass:
             retval |= self.__get_type_id(FontClass.TYPE_FANTASY)
         elif ft == 2 and ((ss >= 11 and ss <= 13) or ss == 15):
             retval |= self.__get_type_id(FontClass.TYPE_SANS_SERIF)
+        elif ft == 2 and (ss >= 2 and ss <= 10):
+            retval |= self.__get_type_id(FontClass.TYPE_SERIF)
         elif ft == 1:
             pass
         elif ft == 0 and ss == 1:
             pass
-        else:
-            retval |= self.__get_type_id(FontClass.TYPE_SERIF)
+#        else:
+#            retval |= self.__get_type_id(FontClass.TYPE_SERIF)
         if (ft == 2 and pp == 9) or (ft == 3 and pp == 3) or (
                 ft == 4 and pp == 9) or (ft == 5 and pp == 3):
             retval |= self.__get_type_id(FontClass.TYPE_MONOSPACE)
 
         return retval
+
+    def __guess_class_from_family(self) -> int:
+        if re.search(r'\bsans\b', self.family, re.IGNORECASE):
+            return self.__get_type_id(FontClass.TYPE_SANS_SERIF)
+        elif re.search(r'\bserif\b', self.family, re.IGNORECASE):
+            return self.__get_type_id(FontClass.TYPE_SERIF)
+        elif re.search(r'\bmono\b', self.family, re.IGNORECASE):
+            return self.__get_type_id(FontClass.TYPE_MONOSPACE)
+        else:
+            return 0
 
     def get_alias_name(self) -> list[str]:
         """Get alias name corresponding to the font."""
@@ -200,7 +213,10 @@ class FontClass:
         id = self.__guess_class()
         retval = []
         if id == 0:
-            return ''
+            id = self.__guess_class_from_family()
+            print(id)
+            if id == 0:
+                return ''
         for i in range(FontClass.TYPE_END):
             if (id & self.__get_type_id(i)) == self.__get_type_id(i):
                 retval.append(alias[i])
