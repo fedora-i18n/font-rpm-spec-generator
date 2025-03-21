@@ -466,7 +466,7 @@ def main():
                         default=True,
                         help='Use rpmautospec.')
     parser.add_argument('--autorelease-opt',
-                        help='Extra arguments to %autorelease.')
+                        help='Extra arguments to %%autorelease.')
     parser.add_argument('--ignore-error',
                         nargs='*',
                         help='Deal with the specific error as warning')

@@ -76,14 +76,7 @@ options:
   --rpmautospec, --no-rpmautospec
                         Use rpmautospec. (default: True)
   --autorelease-opt AUTORELEASE_OPT
-                        Extra arguments to {'option_strings': ['--autorelease-
-                        opt'], 'dest': 'autorelease_opt', 'nargs': None,
-                        'const': None, 'default': None, 'type': None,
-                        'choices': None, 'required': False, 'help': 'Extra
-                        arguments to %autorelease.', 'metavar': None,
-                        'deprecated': False, 'container':
-                        <argparse._ArgumentGroup object at 0x7f9fa88a6ad0>,
-                        'prog': 'generator.py'}utorelease. (default: None)
+                        Extra arguments to %autorelease. (default: None)
   --ignore-error [IGNORE_ERROR ...]
                         Deal with the specific error as warning (default:
                         None)
