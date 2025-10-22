@@ -47,8 +47,7 @@ BuildArch: noarch
 %global fontsex{{ n }}          {{ fonts[n]['exfonts'] }}
 %global fontconfs{{ n }}        %{SOURCE{{ fonts[n]['conf'] }}}
 %global fontconfsex{{ n }}      {{ fonts[n]['exconf'] }}
-%global fontdescription{{ n }}  %{expand:
-%{common_description}
+%global fontdescription{{ n }}  %{expand:%{common_description}
 {{ fonts[n]['description'] }}
 }
 {% endif %}

@@ -67,8 +67,7 @@ BuildRequires: fonts-rpm-macros >= 1:2.0.5-9
 %global fontconfs         %{SOURCE10}
 #
 # A multi-line description block for the generated package.
-%global fontdescription   %{expand:
-{{ description }}
+%global fontdescription   %{expand:{{ description }}
 }
 
 # {{ origsource }}
