@@ -290,7 +290,7 @@ class File:
 
     def is_font(self) -> bool:
         """Whether or not the targeted file is a font."""
-        if self.name.endswith('.otf') or self.name.endswith('.otc') or self.name.endswith('.ttf') or self.name.endswith('.ttc'):
+        if self.name.endswith('.otf') or self.name.endswith('.otc') or self.name.endswith('.ttf') or self.name.endswith('.ttc') or self.name.endswith('.pcf') or self.name.endswith('.pcf.gz'):
             return True
         else:
             return False
@@ -311,8 +311,12 @@ class File:
             raise RuntimeError('fc-query is not installed.')
         p = subprocess.Popen([fcquery, '-f', '%{variable}\n', self.fullname],
                              stdout=subprocess.PIPE)
-        b = p.communicate()[0].decode('utf-8').splitlines()
-        return any([i == 'True' for i in b])
+        (out, err) = p.communicate()
+        if p.returncode == 0:
+            b = out.decode('utf-8').splitlines()
+            return any([i == 'True' for i in b])
+        else:
+            return False
 
     def is_fontconfig(self) -> bool:
         """Whether or not the targeted file is a fontconfig config file."""

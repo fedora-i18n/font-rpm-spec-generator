@@ -160,14 +160,19 @@ def main():
                     has_fonts = True
                     ss = subprocess.run(['fc-query', '-f', '%{lang}\n', f.fullname],
                                         stdout=subprocess.PIPE)
-                    ll = list(filter(None, re.split(r'[,|\n]',
-                                                    ss.stdout.decode('utf-8'))))
+                    if ss.returncode == 0:
+                        ll = list(filter(None, re.split(r'[,|\n]',
+                                                        ss.stdout.decode('utf-8'))))
+                    else:
+                        m([': ', ': ', '']).warning('W').message(f.fullname).message('not supported').out()
+                        ll = []
                     has_lang = has_lang or len(ll) > 0
                     if len(ll) == 1:
                         llist = ll
                     ss = subprocess.run(['fc-scan', '-f', '%{family[0]}\n', f.fullname],
                                         stdout=subprocess.PIPE)
-                    pfamily = ss.stdout.decode('utf-8').splitlines()[0]
+                    if ss.returncode == 0:
+                        pfamily = ss.stdout.decode('utf-8').splitlines()[0]
                 try:
                     if f.families is not None:
                         flist += f.families
