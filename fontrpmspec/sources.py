@@ -149,7 +149,9 @@ class File:
         f = Path(self.prefix) / (self.realname if not u.scheme else self.name)
         if f.is_symlink():
             sym = f.readlink()
-            if not sym.is_relative_to(self.prefix):
+            if not sym.is_relative_to(f.parent):
+                f = sym.relative_to(f.parent)
+            elif not sym.is_relative_to(self.prefix):
                 # Symlink may points to the absolute path.
                 f = Path(self.prefix) / sym.relative_to('/')
         return f
