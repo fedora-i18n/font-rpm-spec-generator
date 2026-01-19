@@ -186,6 +186,8 @@ def generate(name: str, sources: str | list[str], url: str,
                ]).info(k).warning('Multiple generic alias was detected').info(
                    v[0]['fontinfo']['alias']).out()
         if kwargs['alias'] == 'auto':
+            if 'alias' not in v[0]['fontinfo'] or len(v[0]['fontinfo']['alias']) == 0:
+                m([': ']).info(k).error('No generic alias detected').throw(RuntimeError)
             kwargs['alias'] = v[0]['fontinfo']['alias'][0]
         pkgheader = [] if k not in kwargs['pkgheader'] else kwargs[
             'pkgheader'][k]
