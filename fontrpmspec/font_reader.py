@@ -214,9 +214,8 @@ class FontClass:
         retval = []
         if id == 0:
             id = self.__guess_class_from_family()
-            print(id)
             if id == 0:
-                return ''
+                return []
         for i in range(FontClass.TYPE_END):
             if (id & self.__get_type_id(i)) == self.__get_type_id(i):
                 retval.append(alias[i])
